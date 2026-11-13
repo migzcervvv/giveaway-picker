@@ -9,13 +9,14 @@ Read this first after any planner or session change. Sections marked (Codex) are
   - 2026-11-13 Claude: kickoff, plan, kit written.
   - 2026-11-13 ChatGPT: reviewed T02-T05, confirmed T05 merge (#6); drafted D-018 through D-021, merge policy update, and T06 ready card.
   - 2026-11-13 ChatGPT: confirmed PR #7 merge; accepted T06 split per D-022; drafted sequenced T06a/T06b cards and gated T07.
+  - 2026-11-13 ChatGPT: verified T06a merge (#9, ecc56792); prepared T06b activation after confirming D-022 dependency gate.
 
 ## Project snapshot (Planner)
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
 
 ## Current state (Codex)
-- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6).
-- In review: T06a on codex/T06a-db-history.
+- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9).
+- In review: none.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -29,8 +30,8 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T04 | Engine: lifecycle, events, undo | done | #5 |
 | T05 | Engine: hash, record | done | #6 |
 | T06 | Store + Dexie history (split umbrella; non-executable) | stub | |
-| T06a | IndexedDB history schema and repository | in-review | |
-| T06b | Session, settings, history store, unload guard | stub | |
+| T06a | IndexedDB history schema and repository | done | #9 |
+| T06b | Session, settings, history store, unload guard | ready | |
 | T07 | App shell, theme, input UI | stub | |
 | T08 | Draw flow, plain reveal, winner actions | stub | |
 | T09 | History view + exports | stub | |
@@ -45,10 +46,10 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | V2-01 | Google Sheets import | stub | |
 
 ## Planner notes (Planner)
-- Next actions: docs-sync PR to record D-022 and the T06a/T06b split; after SHA-bound review and approved merge, dispatch only T06a. Once T06a merges, prepare a status-only planner update to mark T06b `ready`, then dispatch T06b. T07 stays a stub until both merge.
-- Pending decisions: hosting target and Vite `base` before T16 (D-017). D-022 is proposed in this package and not effective in `main` until the docs-sync PR merges.
-- Review queue: T06 split docs-sync PR when opened; no implementation PR opened at the time of split request.
-- Watch: T06a privacy allowlisting, exact DRAWN validation and atomic transactions; T06b reused entrant IDs/pool generation, cross-draw undo, no saved roster, and leave guard. `scripts/setup-github.mjs` local edit and the separate PROMPTS stash must remain untouched. A future tooling task should add reviewed SHA to `pnpm pr-bundle` output (PR #7 review note).
+- Next actions: review and merge this T06b activation docs-sync PR, then dispatch `docs/tasks/T06b-store-session.md`. T07 remains a stub until T06b merges and its own card is expanded.
+- Pending decisions: hosting target and Vite `base` before T16 (D-017). D-022 is merged; this package activates T06b without introducing a new architectural decision.
+- Review queue: T06b activation docs-sync PR when opened; no T06b implementation PR yet.
+- Watch: T06b reused entrant IDs/pool generation, cross-draw undo, settings privacy whitelist, persistence-first history actions, native IndexedDB errors, and leave guard. Preserve the `scripts/setup-github.mjs` local edit and the existing PROMPTS stash. Future tooling: include reviewed SHA in `pnpm pr-bundle` output (PR #7 review note).
 
 ## Questions from Codex (Codex)
-Resolved: split oversized T06 into T06a and T06b; do not start T06b until T06a merges and planner marks it ready.
+Resolved: T06a merged (#9); T06b becomes ready when this planner docs-sync PR merges. Do not start T07 before both T06a and T06b are done.

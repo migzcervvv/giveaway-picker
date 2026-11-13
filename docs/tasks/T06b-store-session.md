@@ -1,13 +1,13 @@
 ---
 id: T06b
 title: Memory-only session, settings, history store, unload guard
-status: stub
+status: ready
 depends_on: [T06a]
 branch: codex/T06b-store-session
 ---
 # T06b Memory-only session, settings, history store, unload guard
 
-**Not dispatchable until T06a is merged and the planner sets `status: ready`.** The specification is complete for review but depends on the actual merged T06a repository API.
+**Ready for implementation after this planner documentation update is merged and the task is dispatched.** T06a is merged; integrate against its actual repository API.
 
 ## Goal
 Connect the pure draw engine and T06a IndexedDB repository to memory-only session state, persisted non-sensitive preferences, history actions, and an unresolved-draw leave warning. Preserve strict pool/session boundaries and do not implement UI or draw orchestration.
@@ -59,4 +59,4 @@ Connect the pure draw engine and T06a IndexedDB repository to memory-only sessio
 ## PR notes
 - The reviewer will scrutinize D-019/D-020 boundary enforcement, history-store persistence ordering, and unload-guard behavior.
 - If the actual merged T06a API makes these signatures awkward, propose the smallest compatible adjustment in the PR without expanding scope.
-- Do not begin while status is `stub`. After T06a merges, the planner must separately authorize `ready` before Codex starts.
+- Start only after this `ready` status is merged on `main` and the planner dispatches T06b. Handle both typed `DrawRepositoryError` failures and native IndexedDB errors (including `ConstraintError`) without claiming a failed save succeeded.

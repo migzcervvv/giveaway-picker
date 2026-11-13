@@ -1,7 +1,7 @@
 ---
 id: T06a
 title: IndexedDB history schema and repository
-status: in-review
+status: done
 depends_on: [T05]
 branch: codex/T06a-db-history
 ---
