@@ -8,6 +8,7 @@ Read this first after any planner or session change. Sections marked (Codex) are
 - Planner log:
   - 2026-11-13 Claude: kickoff, plan, kit written.
   - 2026-11-13 ChatGPT: reviewed T02-T05, confirmed T05 merge (#6); drafted D-018 through D-021, merge policy update, and T06 ready card.
+  - 2026-11-13 ChatGPT: confirmed PR #7 merge; accepted T06 split per D-022; drafted sequenced T06a/T06b cards and gated T07.
 
 ## Project snapshot (Planner)
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
@@ -27,7 +28,9 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T03 | Engine: rng, draw | done | #4 |
 | T04 | Engine: lifecycle, events, undo | done | #5 |
 | T05 | Engine: hash, record | done | #6 |
-| T06 | Store + Dexie history | ready | |
+| T06 | Store + Dexie history (split umbrella; non-executable) | stub | |
+| T06a | IndexedDB history schema and repository | ready | |
+| T06b | Session, settings, history store, unload guard | stub | |
 | T07 | App shell, theme, input UI | stub | |
 | T08 | Draw flow, plain reveal, winner actions | stub | |
 | T09 | History view + exports | stub | |
@@ -42,10 +45,10 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | V2-01 | Google Sheets import | stub | |
 
 ## Planner notes (Planner)
-- Next actions: apply this planner update as a docs-sync PR, review and merge it, then dispatch T06. T07 remains a stub until T06 merges.
-- Pending decisions: hosting target and Vite `base` before T16 (D-017). D-018 through D-021 are included in this docs-sync package and not effective in `main` until merged.
-- Review queue: docs-sync PR once opened; no open implementation PR known at the time of this package.
-- Watch: T06 must not replay prior persisted events against newly generated `e1`-style entrant IDs; records must be strictly privacy projected. No automatic cross-draw undo after a later draw.
+- Next actions: docs-sync PR to record D-022 and the T06a/T06b split; after SHA-bound review and approved merge, dispatch only T06a. Once T06a merges, prepare a status-only planner update to mark T06b `ready`, then dispatch T06b. T07 stays a stub until both merge.
+- Pending decisions: hosting target and Vite `base` before T16 (D-017). D-022 is proposed in this package and not effective in `main` until the docs-sync PR merges.
+- Review queue: T06 split docs-sync PR when opened; no implementation PR opened at the time of split request.
+- Watch: T06a privacy allowlisting, exact DRAWN validation and atomic transactions; T06b reused entrant IDs/pool generation, cross-draw undo, no saved roster, and leave guard. `scripts/setup-github.mjs` local edit and the separate PROMPTS stash must remain untouched. A future tooling task should add reviewed SHA to `pnpm pr-bundle` output (PR #7 review note).
 
 ## Questions from Codex (Codex)
-None.
+Resolved: split oversized T06 into T06a and T06b; do not start T06b until T06a merges and planner marks it ready.
