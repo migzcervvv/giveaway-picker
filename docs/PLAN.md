@@ -58,13 +58,13 @@ Accounts, backend, social-platform scraping, PDF export, analytics, multi-langua
 | 0 GitHub + kit | `docs/SETUP.md` (owner) |
 | 1 Scaffold | T01 |
 | 2 Engine | T02 normalize/dedupe, T03 rng/draw, T04 lifecycle, T05 hash/record |
-| 3 State + core UI | T06 store/db, T07 input UI, T08 draw flow + plain reveal, T09 history + export |
+| 3 State + core UI | T06a IndexedDB history, T06b session/settings/history stores, then T07 input UI (gated on both), T08 draw flow + plain reveal, T09 history + export |
 | 4 Import | T10 xlsx/csv |
 | 5 Reveal | T11 framework + audio + RevealLab, T12 drum, T13 reel, T14 wheel, T15 winner screen polish |
 | 6 Ship | T16 PWA, T17 a11y + e2e + perf |
 | v2 | V2-01 Google Sheets (Picker, `drive.file` scope; avoid `spreadsheets.readonly` and `drive.readonly`, which require verification) |
 
-Cards T01-T05 are done; T06 is ready following this planner docs-sync merge. Later cards are `stub`; the planner expands a stub into a `ready` card just before dispatch.
+Cards T01-T05 are done. D-022 replaces the previously ready T06 with non-executable umbrella T06, ready T06a, and stub T06b (enabled only after T06a merges). T07 depends on both T06a and T06b and remains `stub`; the planner expands later cards into `ready` cards just before dispatch.
 
 ## 5. v1 definition of done
-All of T01-T17 merged; works fully offline after first load (installable PWA); 100k-name paste handled without UI freeze; engine invariants tested; no network requests at runtime (verified by Playwright); animation modes run at 60 fps on a mid-range laptop; reduced-motion path works.
+T01-T05, T06a, T06b, and T07-T17 merged; works fully offline after first load (installable PWA); 100k-name paste handled without UI freeze; engine invariants tested; no network requests at runtime (verified by Playwright); animation modes run at 60 fps on a mid-range laptop; reduced-motion path works.
