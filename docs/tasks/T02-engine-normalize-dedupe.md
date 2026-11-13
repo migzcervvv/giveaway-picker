@@ -1,7 +1,7 @@
 ---
 id: T02
 title: Engine: normalize, paste, dedupe
-status: ready
+status: in-review
 depends_on: [T01]
 branch: codex/T02-engine-normalize-dedupe
 ---

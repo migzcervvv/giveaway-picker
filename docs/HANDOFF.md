@@ -12,8 +12,8 @@ Read this first after any planner or session change. Sections marked (Codex) are
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
 
 ## Current state (Codex)
-- Merged: nothing yet.
-- Review branch: T01 on `codex/T01-scaffold`.
+- Merged: T01 (#1)
+- In review: T02 on `codex/T02-engine-normalize-dedupe`.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -21,8 +21,8 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 ## Task index (Codex updates status)
 | ID | Title | Status | PR |
 |---|---|---|---|
-| T01 | Scaffold, tooling, CI | in-review | |
-| T02 | Engine: normalize, paste, dedupe | ready | |
+| T01 | Scaffold, tooling, CI | done | #1 |
+| T02 | Engine: normalize, paste, dedupe | in-review | |
 | T03 | Engine: rng, draw | ready | |
 | T04 | Engine: lifecycle, events, undo | ready | |
 | T05 | Engine: hash, record | ready | |
