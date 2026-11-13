@@ -1,7 +1,7 @@
 ---
 id: T04
 title: Engine: lifecycle, events, undo, pool rules
-status: ready
+status: in-review
 depends_on: [T03]
 branch: codex/T04-engine-lifecycle
 ---

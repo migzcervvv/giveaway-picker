@@ -1,7 +1,7 @@
 ---
 id: T03
 title: Engine: rng, draw
-status: in-review
+status: done
 depends_on: [T02]
 branch: codex/T03-engine-rng-draw
 ---
