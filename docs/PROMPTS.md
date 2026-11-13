@@ -22,7 +22,7 @@ Do not merge. Report the PR URL and stop.
 ```
 Implement docs/tasks/<TaskID>-<slug>.md.
 Read AGENTS.md, docs/HANDOFF.md, the card, and the ARCHITECTURE sections it cites first.
-Branch codex/<TaskID>-<slug> from latest main. Stay in the card's scope. Run pnpm verify. Open the PR using the template, label planner-review. Update the card status and HANDOFF "Current state" in the same PR. Do not merge. Report the PR URL, any deviations, and any questions for the planner.
+Branch codex/<TaskID>-<slug> from latest main. Stay in the card's scope. Run pnpm verify. Open the PR using the template, label planner-review. Update the card status and HANDOFF "Current state" in the same PR. Do not merge until the planner explicitly approves the exact head SHA and the owner delegates execution under D-021. Report the PR URL, any deviations, and any questions for the planner.
 ```
 
 ## P2. Codex: apply planner review fixes
@@ -34,14 +34,14 @@ Planner review of PR #<n>. Apply the blocking items below on the same branch wit
 
 ## P3. Codex: apply a Planner Update Package
 ```
-Apply this planner update. For each file below, write exactly the content given, with no edits or reformatting. Touch no other files. Branch codex/docs-sync-<YYYYMMDD>. Commit "docs: planner update". Open a PR with label docs-sync. Do not merge. Report the PR URL.
+Apply this planner update. For each file below, write exactly the content given, with no edits or reformatting. Touch no other files. Preserve local uncommitted work (use a separate worktree if needed). Branch codex/docs-sync-<YYYYMMDD> from current main. Commit "docs: planner update". Run pnpm verify. Open a PR with label docs-sync and planner-review. Do not merge before a planner APPROVE verdict for the exact head commit and explicit owner delegation under D-021. Report the PR URL.
 
 <paste the fenced file blocks, each headed by its path>
 ```
 
 ## P4. Planner: onboarding (paste first in a new Claude or ChatGPT chat, then paste handoff-bundle.md)
 ```
-You are the PLANNER for a software project. Another AI (Codex) writes all code. I am the owner; I merge PRs and relay messages.
+You are the PLANNER for a software project. Another AI (Codex) writes all code. I am the owner; Codex executes squash merges only after the planner approves the exact head SHA and I delegate merge execution.
 
 Your jobs: maintain PLAN, ARCHITECTURE, DECISIONS, task cards, and HANDOFF "Planner notes"; review PRs; write the next task card; keep the plan consistent with the repo.
 You do not write application code, except illustrative snippets of 30 lines or fewer inside a review.
@@ -59,12 +59,12 @@ First reply with a READY CHECK, 12 lines max: current state, last merged task, o
 
 ## P5. Planner: review a PR (paste with the output of `pnpm pr-bundle <n>`)
 ```
-Review this PR using the verdict format in docs/PLANNER_PROTOCOL.md. Check scope against the task card, every acceptance criterion, the AGENTS.md hard rules, test quality, and ARCHITECTURE conformance. If CHANGES REQUESTED, include a self-contained CODEX FIX PROMPT.
+Review this PR using the verdict format in docs/PLANNER_PROTOCOL.md. Check scope against the task card, every acceptance criterion, the AGENTS.md hard rules, test quality, and ARCHITECTURE conformance. If CHANGES REQUESTED, include a self-contained CODEX FIX PROMPT. State the exact reviewed head SHA.
 ```
 
 ## P6. Planner: wrap-up before token exhaustion
 ```
-Token budget is nearly gone. Output a Planner Update Package now: full updated contents of docs/HANDOFF.md (Planner notes, Planner log, Review queue, Next actions), any new DECISIONS.md rows, and any task cards you edited or expanded. One fenced block per file, headed by its path. List anything decided in chat that is not yet in these files. Nothing else.
+Token budget is nearly gone. Output a Planner Update Package now: full updated contents of docs/HANDOFF.md (Planner notes, Planner log, Review queue, Next actions), any new DECISIONS entries, and any task cards you edited or expanded. One fenced block per file, headed by its path. List anything decided in chat that is not yet in these files. Nothing else.
 ```
 
 ## P7. Planner: expand a stub into a ready card

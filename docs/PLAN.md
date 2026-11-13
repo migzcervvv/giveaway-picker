@@ -64,7 +64,7 @@ Accounts, backend, social-platform scraping, PDF export, analytics, multi-langua
 | 6 Ship | T16 PWA, T17 a11y + e2e + perf |
 | v2 | V2-01 Google Sheets (Picker, `drive.file` scope; avoid `spreadsheets.readonly` and `drive.readonly`, which require verification) |
 
-Cards T01-T05 are `ready`. Later cards are `stub`; the planner expands a stub into a `ready` card just before dispatch.
+Cards T01-T05 are done; T06 is ready following this planner docs-sync merge. Later cards are `stub`; the planner expands a stub into a `ready` card just before dispatch.
 
 ## 5. v1 definition of done
 All of T01-T17 merged; works fully offline after first load (installable PWA); 100k-name paste handled without UI freeze; engine invariants tested; no network requests at runtime (verified by Playwright); animation modes run at 60 fps on a mid-range laptop; reduced-motion path works.

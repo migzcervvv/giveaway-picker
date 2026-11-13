@@ -4,16 +4,17 @@ Read this first after any planner or session change. Sections marked (Codex) are
 
 ## Meta (Planner)
 - Last updated: 2026-11-13
-- Active planner: Claude
+- Active planner: ChatGPT
 - Planner log:
   - 2026-11-13 Claude: kickoff, plan, kit written.
+  - 2026-11-13 ChatGPT: reviewed T02-T05, confirmed T05 merge (#6); drafted D-018 through D-021, merge policy update, and T06 ready card.
 
 ## Project snapshot (Planner)
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
 
 ## Current state (Codex)
-- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5)
-- In review: T05 on `codex/T05-engine-hash-record`.
+- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6).
+- In review: none.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -25,8 +26,8 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T02 | Engine: normalize, paste, dedupe | done | #3 |
 | T03 | Engine: rng, draw | done | #4 |
 | T04 | Engine: lifecycle, events, undo | done | #5 |
-| T05 | Engine: hash, record | in-review | |
-| T06 | Store + Dexie history | stub | |
+| T05 | Engine: hash, record | done | #6 |
+| T06 | Store + Dexie history | ready | |
 | T07 | App shell, theme, input UI | stub | |
 | T08 | Draw flow, plain reveal, winner actions | stub | |
 | T09 | History view + exports | stub | |
@@ -41,9 +42,10 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | V2-01 | Google Sheets import | stub | |
 
 ## Planner notes (Planner)
-- Next actions: dispatch T01. After T01 merges, dispatch T02-T05 in order (each depends on the previous).
-- Pending decisions: none.
-- Review queue: none.
+- Next actions: apply this planner update as a docs-sync PR, review and merge it, then dispatch T06. T07 remains a stub until T06 merges.
+- Pending decisions: hosting target and Vite `base` before T16 (D-017). D-018 through D-021 are included in this docs-sync package and not effective in `main` until merged.
+- Review queue: docs-sync PR once opened; no open implementation PR known at the time of this package.
+- Watch: T06 must not replay prior persisted events against newly generated `e1`-style entrant IDs; records must be strictly privacy projected. No automatic cross-draw undo after a later draw.
 
 ## Questions from Codex (Codex)
 None.

@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Project: Giveaway Picker. Offline-first winner picker. Owner: Miggz.
-Roles: Planner (Claude or ChatGPT, interchangeable) writes plans and reviews PRs. Codex (you) implements one task card per PR. Owner merges.
+Roles: Planner (Claude or ChatGPT, interchangeable) writes plans and reviews PRs. Codex implements one task card per PR and executes explicitly approved merges under D-021. Owner retains control of the workflow.
 Source of truth: this repository. Chat history is not.
 
 ## Start of every task
@@ -24,12 +24,13 @@ Paste or import names (xlsx/csv with column picker), normalize and dedupe, draw 
 
 ## Workflow
 - One task card = one branch = one PR. Branch: `codex/<TaskID>-<slug>` from latest `main`.
-- Never push to `main`. Never merge your own PR. After review starts, add commits; do not force-push or rewrite history.
+- Never push directly to `main`. For an implementation PR, stop after opening it and await the planner verdict; do not self-approve. After review starts, add commits without force-pushing or rewriting history.
+- On an explicit planner `APPROVE` verdict, Codex may execute the squash merge under D-021: verify the exact reviewed head SHA still matches, required CI checks are green, and the owner has delegated the merge. If any condition fails, stop. After a successful merge, sync local `main` fast-forward-only, preserve local changes, and report the merge SHA. `CHANGES REQUESTED`, `BLOCKED`, and unreviewed PRs must never be merged.
 - Commits: Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`).
 - Before opening a PR: `pnpm verify` passes (typecheck, lint, test, build).
 - Open the PR ready for review using `.github/pull_request_template.md`. Fill every section. Paste real command output under Verification. Add label `planner-review`.
 - In the same PR: update the task card `status` and the "Current state" section of `docs/HANDOFF.md`.
-- You own code, tests, task-card `status`, and HANDOFF "Current state". The planner owns `docs/PLAN.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, task card bodies, and HANDOFF "Planner notes". Do not edit planner-owned content; propose changes under "Questions for planner" in the PR.
+- You own code, tests, task-card `status`, and HANDOFF "Current state". The planner owns `docs/PLAN.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, task card bodies, and HANDOFF "Planner notes". Do not edit planner-owned content; propose changes under "Questions for planner" in the PR. A planner-supplied docs-sync package is the exception.
 - Ambiguity or conflict with the card: take the smallest safe interpretation, record it under "Deviations" in the PR. Do not redesign. Do not expand scope.
 - Size limit: about 400 changed lines per PR excluding lockfiles and generated files. If the task exceeds it, stop at a clean boundary, open the PR, and note the split in "Questions for planner".
 
