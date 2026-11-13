@@ -9,3 +9,4 @@ evidence/
 .DS_Store
 handoff-bundle.md
 pr-*-bundle.md
+*.tsbuildinfo

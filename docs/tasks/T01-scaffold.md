@@ -1,7 +1,7 @@
 ---
 id: T01
 title: Scaffold, tooling, CI
-status: ready
+status: in-review
 depends_on: []
 branch: codex/T01-scaffold
 ---
