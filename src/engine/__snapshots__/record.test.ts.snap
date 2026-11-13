@@ -1,0 +1,77 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`exports stable schema 1 JSON with replayed statuses 1`] = `
+"{
+  "schema": 1,
+  "drawId": "draw-1",
+  "createdAt": "2026-11-13T00:00:00.000Z",
+  "listHash": "f8cb8aabc826a64a250abb2ab912df1741e026bf8dbc773b3b14981ba007b8f7",
+  "hashAlgo": "sha256",
+  "normalizationVersion": 1,
+  "counts": {
+    "entrantCount": 3,
+    "rawCount": 5,
+    "blankDropped": 1,
+    "duplicatesRemoved": 1
+  },
+  "config": {
+    "winners": 1,
+    "backups": 1,
+    "dedupe": true,
+    "foldDiacritics": false,
+    "removeCalled": true
+  },
+  "slots": [
+    {
+      "rank": 1,
+      "role": "winner",
+      "entrantId": "e1",
+      "name": "Alice"
+    },
+    {
+      "rank": 2,
+      "role": "backup",
+      "entrantId": "e2",
+      "name": "Bob"
+    }
+  ],
+  "events": [
+    {
+      "id": "drawn",
+      "at": "2026-11-13T00:00:00.000Z",
+      "type": "DRAWN",
+      "slots": [
+        {
+          "rank": 1,
+          "role": "winner",
+          "entrantId": "e1",
+          "name": "Alice"
+        },
+        {
+          "rank": 2,
+          "role": "backup",
+          "entrantId": "e2",
+          "name": "Bob"
+        }
+      ]
+    },
+    {
+      "id": "event-1",
+      "at": "2026-11-13T00:00:00.000Z",
+      "type": "NO_SHOW",
+      "rank": 1
+    },
+    {
+      "id": "event-2",
+      "at": "2026-11-13T00:00:00.000Z",
+      "type": "PROMOTED",
+      "backupRank": 2,
+      "replacesRank": 1
+    }
+  ],
+  "finalStatus": {
+    "1": "no_show",
+    "2": "promoted"
+  }
+}"
+`;
