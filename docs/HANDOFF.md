@@ -13,15 +13,15 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 
 ## Current state (Codex)
 - Merged: nothing yet.
-- Open PRs: none.
-- Toolchain versions (fill in T01): Node __, pnpm __, Vite __, React __, TypeScript __, Tailwind __, Vitest __, Playwright __.
-- Chosen fonts (fill in T01): display __, mono __.
+- Review branch: T01 on `codex/T01-scaffold`.
+- Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
+- Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
 
 ## Task index (Codex updates status)
 | ID | Title | Status | PR |
 |---|---|---|---|
-| T01 | Scaffold, tooling, CI | ready | |
+| T01 | Scaffold, tooling, CI | in-review | |
 | T02 | Engine: normalize, paste, dedupe | ready | |
 | T03 | Engine: rng, draw | ready | |
 | T04 | Engine: lifecycle, events, undo | ready | |
