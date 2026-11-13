@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+evidence/
+.env
+.env.*
+.DS_Store
+handoff-bundle.md
+pr-*-bundle.md
