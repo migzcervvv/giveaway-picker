@@ -64,7 +64,7 @@ Accounts, backend, social-platform scraping, PDF export, analytics, multi-langua
 | 6 Ship | T16 PWA, T17 a11y + e2e + perf |
 | v2 | V2-01 Google Sheets (Picker, `drive.file` scope; avoid `spreadsheets.readonly` and `drive.readonly`, which require verification) |
 
-Cards T01-T05 are done. D-022 replaces the previously ready T06 with non-executable umbrella T06, ready T06a, and stub T06b (enabled only after T06a merges). T07 depends on both T06a and T06b and remains `stub`; the planner expands later cards into `ready` cards just before dispatch.
+Cards T01-T05 and T06a are done. Under D-022, T06 remains a non-executable umbrella and T06b is `ready` following this documentation update. T07 depends on both T06a and T06b and remains `stub`; the planner expands later cards into `ready` cards just before dispatch.
 
 ## 5. v1 definition of done
 T01-T05, T06a, T06b, and T07-T17 merged; works fully offline after first load (installable PWA); 100k-name paste handled without UI freeze; engine invariants tested; no network requests at runtime (verified by Playwright); animation modes run at 60 fps on a mid-range laptop; reduced-motion path works.
