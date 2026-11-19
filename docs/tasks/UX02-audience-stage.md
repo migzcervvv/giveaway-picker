@@ -1,7 +1,7 @@
 ---
 id: UX02
 title: The Lucky Draw — audience stage and static reveal
-status: ready
+status: in-review
 depends_on: [UX01]
 branch: codex/UX02-audience-stage
 ---

@@ -27,11 +27,13 @@ export function InputScreen({
   counts = drawConfigStore,
   runner,
   onDraw,
+  onAudience,
 }: {
   session?: typeof sessionStore;
   settings?: typeof settingsStore;
   counts?: typeof drawConfigStore;
   runner?: BuildRunner;
+  onAudience?: () => void;
   onDraw?: (ready: boolean) => void;
 } = {}) {
   const list = useListBuilder({ session, settings, runner });
@@ -242,7 +244,9 @@ export function InputScreen({
           )}
         </Section>
         <Section title="Draw settings" step={2}>
-          <p className="pool-count">{format.format(poolSize)} eligible entrants</p>
+          <p className="pool-count">
+            {format.format(poolSize)} eligible entrants
+          </p>
           <Stepper
             label="Winners"
             value={config.winners}
@@ -297,6 +301,11 @@ export function InputScreen({
           >
             Draw
           </Button>
+          {onAudience && (
+            <Button disabled={!ready || poolSize === 0} onClick={onAudience}>
+              Audience View
+            </Button>
+          )}
           {!ready ? (
             <p className="text-sm text-[var(--muted)]">
               Enter names and wait for the current list to finish building.
