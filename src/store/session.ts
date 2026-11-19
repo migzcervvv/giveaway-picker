@@ -1,6 +1,8 @@
 import { createStore } from 'zustand/vanilla';
-import { applyAction, deriveState } from '@/engine';
+import { applyAction, deriveState, toExportJson } from '@/engine';
 import type { BuildResult, DrawRecord } from '@/engine';
+type BuildOptions = { dedupe: boolean; foldDiacritics: boolean };
+const defaultOptions: BuildOptions = { dedupe: true, foldDiacritics: false };
 
 export function hasUnresolvedDraw(draws: readonly DrawRecord[]): boolean {
   return draws.some(({ events }) =>
@@ -12,10 +14,14 @@ export function hasUnresolvedDraw(draws: readonly DrawRecord[]): boolean {
 
 export function createSessionStore() {
   return createStore((set, get: () => SessionState): SessionState => {
-    function resetPool(rawText: string, build: BuildResult | null) {
+    function resetPool(
+      rawText: string,
+      build: BuildResult | null,
+      buildOptions = get().buildOptions,
+    ) {
       if (hasUnresolvedDraw(get().draws))
         throw new Error('Resolve the current draws before replacing the pool');
-      set({ rawText, build, generation: Symbol(), draws: [] });
+      set({ rawText, build, buildOptions, generation: Symbol(), draws: [] });
     }
 
     function checkGeneration(generation: symbol) {
@@ -26,14 +32,15 @@ export function createSessionStore() {
     return {
       rawText: '',
       build: null,
+      buildOptions: defaultOptions,
       generation: Symbol(),
       draws: [],
       setInput(rawText) {
         if (rawText !== get().rawText) resetPool(rawText, null);
       },
-      setBuild(build, generation) {
+      setBuild(build, generation, buildOptions = defaultOptions) {
         checkGeneration(generation);
-        resetPool(get().rawText, build);
+        resetPool(get().rawText, build, buildOptions);
       },
       reset() {
         resetPool('', null);
@@ -42,6 +49,19 @@ export function createSessionStore() {
         checkGeneration(generation);
         const { build, draws } = get();
         if (!build) throw new Error('No active entrant pool');
+        const previous = draws.find(({ id }) => id === record.id);
+        if (
+          previous &&
+          (record.events.length < previous.events.length ||
+            toExportJson({
+              ...record,
+              events: record.events.slice(0, previous.events.length),
+            }) !== toExportJson(previous))
+        ) {
+          throw new Error(
+            'A draw update must preserve its identity and extend its event log',
+          );
+        }
         const next = draws.some(({ id }) => id === record.id)
           ? draws.map((draw) => (draw.id === record.id ? record : draw))
           : [...draws, record];
@@ -64,10 +84,15 @@ export function createSessionStore() {
 type SessionState = {
   rawText: string;
   build: BuildResult | null;
+  buildOptions: BuildOptions;
   generation: symbol;
   draws: readonly DrawRecord[];
   setInput(rawText: string): void;
-  setBuild(build: BuildResult, generation: symbol): void;
+  setBuild(
+    build: BuildResult,
+    generation: symbol,
+    options?: BuildOptions,
+  ): void;
   reset(): void;
   setDraw(record: DrawRecord, generation: symbol): void;
   prepareAction(

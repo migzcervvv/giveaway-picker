@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ClipboardEvent } from 'react';
 import { useStore } from 'zustand';
-import { looksTabular } from '@/engine';
+import { eligiblePool, looksTabular } from '@/engine';
 import type { BuildRunner } from '@/io/build/runner';
 import { drawConfigStore } from '@/store/drawConfig';
 import { sessionStore } from '@/store/session';
@@ -25,17 +25,32 @@ export function InputScreen({
   settings = settingsStore,
   counts = drawConfigStore,
   runner,
+  onDraw,
 }: {
   session?: typeof sessionStore;
   settings?: typeof settingsStore;
   counts?: typeof drawConfigStore;
   runner?: BuildRunner;
+  onDraw?: (ready: boolean) => void;
 } = {}) {
   const list = useListBuilder({ session, settings, runner });
   const build = useStore(session, (state) => state.build);
+  const buildOptions = useStore(session, (state) => state.buildOptions);
   const preferences = useStore(settings);
   const config = useStore(counts);
-  const poolSize = build?.stats.finalCount ?? 0;
+  const draws = useStore(session, (state) => state.draws);
+  const poolSize = eligiblePool(
+    build?.entrants ?? [],
+    draws.map(({ events }) => events),
+    preferences,
+  ).length;
+  const ready =
+    !!build &&
+    buildOptions.dedupe === preferences.dedupe &&
+    buildOptions.foldDiacritics === preferences.foldDiacritics &&
+    list.text === session.getState().rawText &&
+    list.status !== 'building' &&
+    list.status !== 'error';
   const lockId = useId();
   const inputId = useId();
   const [clipboardError, setClipboardError] = useState('');
@@ -82,9 +97,11 @@ export function InputScreen({
   async function pasteClipboard() {
     try {
       const text = await navigator.clipboard.readText();
+      if (!list.isActive()) return;
       list.setText(normalizeLineEndings(text), { immediate: true });
       setClipboardError('');
     } catch {
+      if (!list.isActive()) return;
       setClipboardError(
         'Clipboard access was blocked. Press Ctrl+V in the box.',
       );
@@ -209,6 +226,7 @@ export function InputScreen({
           )}
         </Section>
         <Section title="Draw settings">
+          <p>{format.format(poolSize)} eligible entrants</p>
           <Stepper
             label="Winners"
             value={config.winners}
@@ -250,7 +268,30 @@ export function InputScreen({
               checked={preferences.removeCalled}
               onChange={(removeCalled) => preferences.update({ removeCalled })}
             />
+            <Switch
+              label="Reveal one at a time"
+              checked={preferences.oneAtATime}
+              onChange={(oneAtATime) => preferences.update({ oneAtATime })}
+            />
           </div>
+          <Button
+            disabled={!ready || poolSize === 0 || !onDraw}
+            onClick={() => onDraw?.(ready)}
+          >
+            Draw
+          </Button>
+          {!ready ? (
+            <p className="text-sm text-[var(--muted)]">
+              Enter names and wait for the current list to finish building.
+            </p>
+          ) : (
+            poolSize === 0 && (
+              <p>
+                No eligible entrants remain. Resolve open draws or change the
+                list after all winners are resolved.
+              </p>
+            )
+          )}
         </Section>
       </div>
     </div>

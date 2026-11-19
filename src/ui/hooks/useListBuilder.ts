@@ -11,6 +11,7 @@ export type ListBuilder = {
   status: 'idle' | 'building' | 'ready' | 'error';
   error: string | null;
   locked: boolean;
+  isActive(): boolean;
   setText(text: string, options?: { immediate?: boolean }): void;
   clear(): void;
 };
@@ -35,13 +36,25 @@ export function useListBuilder({
     job: 0,
     timer: undefined as ReturnType<typeof setTimeout> | undefined,
     runner: initialRunner,
+    mounted: false,
   });
   const locked = useStore(session, (state) => hasUnresolvedDraw(state.draws));
 
   useEffect(() => {
     const current = control.current;
+    current.mounted = true;
     // React StrictMode replays effects. Recreate an owned runner after cleanup.
     current.runner = suppliedRunner ?? createBuildRunner();
+    const state = session.getState();
+    const { dedupe, foldDiacritics } = settings.getState();
+    if (
+      state.rawText.trim() &&
+      !hasUnresolvedDraw(state.draws) &&
+      (!state.build ||
+        state.buildOptions.dedupe !== dedupe ||
+        state.buildOptions.foldDiacritics !== foldDiacritics)
+    )
+      void build(state.rawText);
     const unsubscribe = settings.subscribe((next, previous) => {
       if (
         (next.dedupe !== previous.dedupe ||
@@ -53,6 +66,7 @@ export function useListBuilder({
       }
     });
     return () => {
+      current.mounted = false;
       unsubscribe();
       clearTimeout(current.timer);
       current.job++;
@@ -84,7 +98,9 @@ export function useListBuilder({
       if (job !== current.job) return;
       if (generation !== session.getState().generation) return;
       if (value !== session.getState().rawText) return;
-      session.getState().setBuild(result, generation);
+      session
+        .getState()
+        .setBuild(result, generation, { dedupe, foldDiacritics });
       setStatus('ready');
     } catch (cause) {
       if (job === current.job && !(cause instanceof BuildSupersededError))
@@ -111,7 +127,8 @@ export function useListBuilder({
   }
 
   function setText(value: string, options?: { immediate?: boolean }) {
-    if (hasUnresolvedDraw(session.getState().draws)) return;
+    if (!control.current.mounted || hasUnresolvedDraw(session.getState().draws))
+      return;
     const current = control.current;
     current.job++;
     current.runner.cancel();
@@ -127,6 +144,7 @@ export function useListBuilder({
     status,
     error,
     locked,
+    isActive: () => control.current.mounted,
     setText,
     clear: () => setText('', { immediate: true }),
   };

@@ -63,7 +63,12 @@ test.each(['2026-11-19T09:59:00Z', at, '2026-11-19T10:01:00Z'])(
       { ...second, createdAt: '2026-11-19T08:00:00Z' },
     ]) {
       const before = session.getState().draws;
-      setDraw(replacement, generation);
+      expect(() => setDraw(replacement, generation)).toThrow(
+        'preserve its identity',
+      );
+      const original = replacement.id === first.id ? first : second;
+      const refreshed = { ...original };
+      setDraw(refreshed, generation);
       expect(before.map(({ id }) => id)).toEqual(['first', 'second']);
       expect(session.getState().draws.map(({ id }) => id)).toEqual([
         'first',
@@ -71,7 +76,7 @@ test.each(['2026-11-19T09:59:00Z', at, '2026-11-19T10:01:00Z'])(
       ]);
       expect(
         session.getState().draws.find(({ id }) => id === replacement.id),
-      ).toBe(replacement);
+      ).toBe(refreshed);
       expect(session.getState().generation).toBe(generation);
       const snapshot = session.getState();
       expect(() =>

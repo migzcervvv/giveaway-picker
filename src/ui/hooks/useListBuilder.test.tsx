@@ -263,6 +263,24 @@ test('unmount cancels debounce and prevents a late result from updating the sess
   expect(runner.cancel).toHaveBeenCalledTimes(3);
 });
 
+test('retired hook cannot commit immediate or debounced input', async () => {
+  vi.useFakeTimers();
+  const deps = dependencies();
+  const { result, unmount } = renderHook(() => useListBuilder(deps));
+  const retired = result.current;
+  const before = deps.session.getState();
+  unmount();
+  act(() => {
+    retired.setText('Late clipboard', { immediate: true });
+    retired.setText('Late edit');
+    retired.clear();
+  });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(500);
+  });
+  expect(deps.session.getState()).toBe(before);
+});
+
 test('reports session commit and build failures through error state', async () => {
   const deps = dependencies();
   const { result } = renderHook(() => useListBuilder(deps));
