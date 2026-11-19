@@ -17,8 +17,8 @@ Read this first after any planner or session change. Sections marked (Codex) are
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
 
 ## Current state (Codex)
-- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11), T07a (#17), T07b (#18), Issue #16 (#19).
-- In review: T08 first playable raffle on `codex/T08-draw-flow`.
+- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11), T07a (#17), T07b (#18), Issue #16 (#19), T08 (#20).
+- In review: T09 history and exports on `codex/T09-history-export`.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -37,8 +37,8 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T07 | App shell, theme, input UI (split umbrella; non-executable) | stub | |
 | T07a | List build runner, draw-config store, useListBuilder hook | done | #17 |
 | T07b | App shell, theme primitives, input screen (gated on T07a) | done | #18 |
-| T08 | Draw flow, plain reveal, winner actions | in-review | |
-| T09 | History view + exports | stub | |
+| T08 | Draw flow, plain reveal, winner actions | done | #20 |
+| T09 | History view + exports | in-review | |
 | T10 | xlsx/csv import + column picker | stub | |
 | T11 | Reveal framework, audio, RevealLab | stub | |
 | T12 | Raffle drum | stub | |
@@ -52,7 +52,7 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 ## Planner notes (Planner)
 - Next actions: merge this docs-sync PR, then dispatch `docs/tasks/T07a-build-runner.md`. T07b is spec-complete but `stub` until T07a merges; the planner then flips it to `ready`.
 - Pending decisions:
-  - P-1 (before T08/T09): after a reload, stored draws with unresolved slots are not in the session pool, so `session.prepareAction` cannot act on them. T09 either lets history mark called/no-show on stored draws using engine `applyAction` plus `history.append` on that draw's own events (D-020 only forbids cross-pool exclusion), or keeps history read-only. Decide in the T08/T09 cards.
+  - P-1 resolved by D-026: persisted history is read-only; archived draws may be viewed, exported, or deleted. CALLED/NO_SHOW/UNDO remain in the current-session T08 flow. Archived IDs/hashes never attach to a new pool.
   - D-017: hosting target and Vite `base`, before T16.
 - Review queue: none.
 - Watch (carry into cards):

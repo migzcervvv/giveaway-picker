@@ -3,11 +3,22 @@ import { WinnersScreen } from './screens/WinnersScreen';
 import { useStore } from 'zustand';
 import { drawFlowStore } from '@/store/drawFlow';
 import { Button } from './components/Button';
+import { useState } from 'react';
+import { deriveState } from '@/engine';
+import { HistoryScreen } from './screens/HistoryScreen';
 
 export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
   const state = useStore(flow);
   const draws = useStore(state.session, (session) => session.draws);
   const active = draws.some(({ id }) => id === state.activeId);
+  const [historyOpen, openHistory] = useState(false);
+  const hidden = draws.some((draw) =>
+    deriveState(draw.events).slots.some(
+      (slot) =>
+        slot.rank > (state.visible[draw.id] ?? draw.slots.length) &&
+        (slot.role !== 'backup' || slot.status === 'standby'),
+    ),
+  );
   return (
     <div className="app-shell">
       <a href="#main" className="skip-link">
@@ -20,6 +31,20 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
         </p>
       </header>
       <main id="main" tabIndex={-1}>
+        <div className="mb-6 flex flex-wrap gap-3">
+          <Button
+            disabled={state.busy || hidden}
+            onClick={() => openHistory(true)}
+          >
+            History
+          </Button>
+          {historyOpen && (
+            <Button disabled={state.busy} onClick={() => openHistory(false)}>
+              Return to raffle
+            </Button>
+          )}
+        </div>
+        {hidden && <p>Reveal every selected slot before opening History.</p>}
         <p role="status" aria-live="polite" aria-atomic="true">
           {state.announcement}
         </p>
@@ -32,7 +57,7 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
           <p role="status">Preparing draw…</p>
         ) : (
           <>
-            {draws.length > 0 && (
+            {!historyOpen && draws.length > 0 && (
               <nav
                 aria-label="Current session draws"
                 className="mb-6 flex flex-wrap gap-3"
@@ -49,7 +74,9 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
                 ))}
               </nav>
             )}
-            {active ? (
+            {historyOpen && !hidden ? (
+              <HistoryScreen flow={flow} />
+            ) : active ? (
               <WinnersScreen flow={flow} />
             ) : (
               <InputScreen
