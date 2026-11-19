@@ -134,8 +134,8 @@ test('restricts undo to the latest draw and prepares actions without writing sta
   };
   const repo = createDrawRepository(database());
   await repo.saveRecord(resolved);
-  actions.setDraw(resolved, generation);
   actions.setDraw(older, generation);
+  actions.setDraw(resolved, generation);
   actions.setDraw(older, generation);
   const before = session.getState();
   expect(() => actions.prepareAction(older.id, undo, at, newId)).toThrow(
@@ -230,4 +230,42 @@ test('beforeunload tracks pending, promotion, resolution, undo and cleanup', asy
   expect(warns()).toBe(true);
   cleanup();
   expect(warns()).toBe(false);
+});
+
+test('history timestamp ordering with ties stays the same after reloading', async () => {
+  const repo = createDrawRepository(database());
+  const history = createHistoryStore(repo);
+  const draw = await record(build('Alice', 'Bob'));
+  for (const entry of [
+    { ...draw, id: 'z' },
+    { ...draw, id: 'latest', createdAt: '2026-11-14T00:00:00.000Z' },
+    { ...draw, id: 'a' },
+  ])
+    await history.getState().save(entry);
+  const saved = history.getState().records;
+  expect(saved.map(({ id }) => id)).toEqual(['latest', 'a', 'z']);
+  await history.getState().load();
+  expect(history.getState().records).toEqual(saved);
+});
+
+test('overlapping history operations stay queued and loading remains true until all finish', async () => {
+  const repo = createDrawRepository(database());
+  const history = createHistoryStore(repo);
+  const draw = await record(build('Alice', 'Bob'));
+  const event: DrawEvent = { id: 'called', at, type: 'CALLED', rank: 1 };
+  const saving = history.getState().save(draw);
+  const appending = history.getState().append(draw.id, [event], 1);
+  const loading = history.getState().load();
+  expect(history.getState()).toMatchObject({ loading: true, records: [] });
+  await saving;
+  expect(history.getState().loading).toBe(true);
+  await appending;
+  expect(history.getState().loading).toBe(true);
+  await loading;
+  expect(history.getState()).toMatchObject({ loading: false, error: null });
+  expect(history.getState().records[0]?.events).toEqual([
+    ...draw.events,
+    event,
+  ]);
+  expect(await repo.getRecord(draw.id)).toEqual(history.getState().records[0]);
 });

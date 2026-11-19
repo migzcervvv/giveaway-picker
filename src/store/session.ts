@@ -44,13 +44,7 @@ export function createSessionStore() {
         if (!build) throw new Error('No active entrant pool');
         const next = draws.some(({ id }) => id === record.id)
           ? draws.map((draw) => (draw.id === record.id ? record : draw))
-          : [...draws, record].sort((a, b) =>
-              a.createdAt < b.createdAt
-                ? -1
-                : a.createdAt > b.createdAt
-                  ? 1
-                  : 0,
-            );
+          : [...draws, record];
         set({ draws: next });
       },
       prepareAction(drawId, action, now, newId) {
