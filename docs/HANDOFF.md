@@ -18,7 +18,7 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 
 ## Current state (Codex)
 - Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11).
-- In review: none.
+- In review: T07a on `codex/T07a-build-runner`.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -35,7 +35,7 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T06a | IndexedDB history schema and repository | done | #9 |
 | T06b | Session, settings, history store, unload guard | done | #11 |
 | T07 | App shell, theme, input UI (split umbrella; non-executable) | stub | |
-| T07a | List build runner, draw-config store, useListBuilder hook | ready | |
+| T07a | List build runner, draw-config store, useListBuilder hook | in-review | |
 | T07b | App shell, theme primitives, input screen (gated on T07a) | stub | |
 | T08 | Draw flow, plain reveal, winner actions | stub | |
 | T09 | History view + exports | stub | |

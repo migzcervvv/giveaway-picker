@@ -1,7 +1,7 @@
 ---
 id: T07a
 title: List build runner, draw-config store, useListBuilder hook
-status: ready
+status: in-review
 depends_on: [T06a, T06b]
 branch: codex/T07a-build-runner
 ---
