@@ -16,7 +16,7 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 
 ## Current state (Codex)
 - Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9).
-- In review: none.
+- In review: T06b on codex/T06b-store-session.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -31,7 +31,7 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T05 | Engine: hash, record | done | #6 |
 | T06 | Store + Dexie history (split umbrella; non-executable) | stub | |
 | T06a | IndexedDB history schema and repository | done | #9 |
-| T06b | Session, settings, history store, unload guard | ready | |
+| T06b | Session, settings, history store, unload guard | in-review | |
 | T07 | App shell, theme, input UI | stub | |
 | T08 | Draw flow, plain reveal, winner actions | stub | |
 | T09 | History view + exports | stub | |
