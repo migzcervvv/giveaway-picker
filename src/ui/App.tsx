@@ -1,3 +1,4 @@
+import { AudienceStage, type Prize } from './screens/AudienceStage';
 import { InputScreen } from './screens/InputScreen';
 import { WinnersScreen } from './screens/WinnersScreen';
 import { useStore } from 'zustand';
@@ -12,6 +13,9 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
   const draws = useStore(state.session, (session) => session.draws);
   const active = draws.some(({ id }) => id === state.activeId);
   const [historyOpen, openHistory] = useState(false);
+  const [audience, setAudience] = useState(false);
+  const [prize, setPrize] = useState<Prize>('Minor');
+  const [presented, setPresented] = useState<Record<string, number>>({});
   const hidden = draws.some((draw) =>
     deriveState(draw.events).slots.some(
       (slot) =>
@@ -19,6 +23,22 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
         (slot.role !== 'backup' || slot.status === 'standby'),
     ),
   );
+  if (audience)
+    return (
+      <AudienceStage
+        flow={flow}
+        prize={prize}
+        setPrize={setPrize}
+        shown={presented[state.activeId ?? ''] ?? 0}
+        onReveal={(id, count) =>
+          setPresented((previous) => ({
+            ...previous,
+            [id]: Math.max(previous[id] ?? 0, count),
+          }))
+        }
+        onExit={() => setAudience(false)}
+      />
+    );
   return (
     <div className="app-shell">
       <a href="#main" className="skip-link">
@@ -37,6 +57,11 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
           </p>
         </div>
         <nav aria-label="Operator navigation" className="flex flex-wrap gap-2">
+          {active && !historyOpen && (
+            <Button disabled={state.busy} onClick={() => setAudience(true)}>
+              Audience View
+            </Button>
+          )}
           {historyOpen && (
             <Button disabled={state.busy} onClick={() => openHistory(false)}>
               Return to raffle
@@ -91,6 +116,7 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
                 session={state.session}
                 settings={state.settings}
                 counts={state.counts}
+                onAudience={() => setAudience(true)}
                 onDraw={(ready) => void state.start(ready)}
               />
             )}

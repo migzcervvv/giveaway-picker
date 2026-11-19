@@ -17,8 +17,8 @@ Read this first after any planner or session change. Sections marked (Codex) are
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
 
 ## Current state (Codex)
-- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11), T07a (#17), T07b (#18), Issue #16 (#19), T08 (#20), T09 (#21), T10a (#22), T10b (#23).
-- In review: UX01 operator interface on `codex/UX01-operator-ui`.
+- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11), T07a (#17), T07b (#18), Issue #16 (#19), T08 (#20), T09 (#21), T10a (#22), T10b (#23), UX01 (#24).
+- In review: UX02 audience stage on `codex/UX02-audience-stage`.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -42,8 +42,8 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T10 | Spreadsheet import (non-executable umbrella) | stub | |
 | T10a | Import worker | done | #22 |
 | T10b | Import picker UI | done | #23 |
-| UX01 | Operator interface | in-review | |
-| UX02 | Audience stage | ready | |
+| UX01 | Operator interface | done | #24 |
+| UX02 | Audience stage | in-review | |
 | UX03 | Card reveal | ready | |
 | T11 | Reveal framework, audio, RevealLab | stub | |
 | T12 | Raffle drum | stub | |
