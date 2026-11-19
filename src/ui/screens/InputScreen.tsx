@@ -35,6 +35,7 @@ export function InputScreen({
 } = {}) {
   const list = useListBuilder({ session, settings, runner });
   const build = useStore(session, (state) => state.build);
+  const buildOptions = useStore(session, (state) => state.buildOptions);
   const preferences = useStore(settings);
   const config = useStore(counts);
   const draws = useStore(session, (state) => state.draws);
@@ -45,6 +46,8 @@ export function InputScreen({
   ).length;
   const ready =
     !!build &&
+    buildOptions.dedupe === preferences.dedupe &&
+    buildOptions.foldDiacritics === preferences.foldDiacritics &&
     list.text === session.getState().rawText &&
     list.status !== 'building' &&
     list.status !== 'error';
@@ -94,9 +97,11 @@ export function InputScreen({
   async function pasteClipboard() {
     try {
       const text = await navigator.clipboard.readText();
+      if (!list.isActive()) return;
       list.setText(normalizeLineEndings(text), { immediate: true });
       setClipboardError('');
     } catch {
+      if (!list.isActive()) return;
       setClipboardError(
         'Clipboard access was blocked. Press Ctrl+V in the box.',
       );

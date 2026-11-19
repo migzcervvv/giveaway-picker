@@ -75,10 +75,15 @@ export function createDrawFlow({
       announcement: '',
       start: (ready) =>
         run(async (saved) => {
-          const { build, generation, draws } = session.getState();
-          if (!ready || !build)
-            throw new Error('Wait for the current input to finish building');
+          const { build, buildOptions, generation, draws } = session.getState();
           const preferences = settings.getState();
+          if (
+            !ready ||
+            !build ||
+            buildOptions.dedupe !== preferences.dedupe ||
+            buildOptions.foldDiacritics !== preferences.foldDiacritics
+          )
+            throw new Error('Wait for the current input to finish building');
           const eligible = eligiblePool(
             build.entrants,
             draws.map(({ events }) => events),
