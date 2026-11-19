@@ -16,7 +16,7 @@ export function WinnersScreen({
   const derived = deriveState(record.events);
   const visible = state.visible[record.id] ?? record.slots.length;
   return (
-    <Section title="Draw results">
+    <Section title="Draw results" step={3}>
       <p className="break-all text-sm text-[var(--muted)]">
         Draw {record.id} · {record.createdAt}
       </p>
@@ -28,17 +28,20 @@ export function WinnersScreen({
               (slot.role === 'backup' && slot.status !== 'standby'),
           )
           .map((slot) => (
-            <li key={slot.rank} className="space-y-3">
+            <li key={slot.rank} className="winner-row space-y-3">
               <p>
                 {slot.role === 'winner'
                   ? `Winner ${slot.rank}`
                   : `Backup ${slot.rank - record.config.winners}`}{' '}
                 · {slot.status.replace('_', '-')}
               </p>
-              <p className="break-words font-display text-4xl">{slot.name}</p>
+              <p dir="auto" className="break-words font-display text-4xl">
+                {slot.name}
+              </p>
               {(slot.status === 'pending' || slot.status === 'promoted') && (
                 <div className="flex flex-wrap gap-3">
                   <Button
+                    className="primary-action"
                     aria-label={`Mark ${slot.name} called`}
                     disabled={state.busy}
                     onClick={() =>

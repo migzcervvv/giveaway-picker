@@ -24,26 +24,34 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
-      <header className="mb-12 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-3xl">Giveaway Picker</h1>
-        <p className="max-w-xs text-sm leading-relaxed text-[var(--muted)]">
-          Runs on this device. Nothing is uploaded.
-        </p>
-      </header>
-      <main id="main" tabIndex={-1}>
-        <div className="mb-6 flex flex-wrap gap-3">
-          <Button
-            disabled={state.busy || hidden}
-            onClick={() => openHistory(true)}
-          >
-            History
-          </Button>
+      <header className="masthead">
+        <div>
+          <h1 className="brand">
+            <span aria-hidden="true" className="ticket-mark">
+              ✦
+            </span>
+            The Lucky Draw
+          </h1>
+          <p className="privacy-note">
+            Runs on this device. Nothing is uploaded.
+          </p>
+        </div>
+        <nav aria-label="Operator navigation" className="flex flex-wrap gap-2">
           {historyOpen && (
             <Button disabled={state.busy} onClick={() => openHistory(false)}>
               Return to raffle
             </Button>
           )}
-        </div>
+          <Button
+            aria-current={historyOpen ? 'page' : undefined}
+            disabled={state.busy || hidden || historyOpen}
+            onClick={() => openHistory(true)}
+          >
+            History
+          </Button>
+        </nav>
+      </header>
+      <main id="main" tabIndex={-1}>
         {hidden && <p>Reveal every selected slot before opening History.</p>}
         <p role="status" aria-live="polite" aria-atomic="true">
           {state.announcement}

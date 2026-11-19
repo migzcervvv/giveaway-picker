@@ -4,17 +4,21 @@ import type { ReactNode } from 'react';
 export function Section({
   title,
   children,
+  step,
 }: {
   title: string;
+  step?: number;
   children: ReactNode;
 }) {
   const id = useId();
   return (
-    <section
-      aria-labelledby={id}
-      className="space-y-5 border-t border-[var(--muted)]/30 pt-5"
-    >
-      <h2 id={id} className="font-display text-2xl">
+    <section aria-labelledby={id} className="panel space-y-4">
+      <h2 id={id} className="panel-title">
+        {step && (
+          <span className="step" aria-hidden="true">
+            {step}
+          </span>
+        )}
         {title}
       </h2>
       {children}

@@ -116,7 +116,7 @@ export function InputScreen({
 
   return (
     <div className="input-layout">
-      <Section title="Entrant list">
+      <Section title="Entrant list" step={1}>
         <ImportPicker
           session={session}
           onApply={(text) =>
@@ -142,7 +142,7 @@ export function InputScreen({
             })
           }
           onPaste={paste}
-          className="min-h-80 w-full resize-y border border-[var(--muted)] bg-[var(--surface)] p-5 text-base leading-7 placeholder:text-[var(--muted)] md:min-h-[32rem]"
+          className="entrant-draft w-full resize-y border border-[var(--muted)] bg-[var(--surface)] p-5 text-base leading-7 placeholder:text-[var(--muted)]"
         />
         <div className="flex flex-wrap gap-3">
           {typeof navigator.clipboard?.readText === 'function' && (
@@ -178,7 +178,7 @@ export function InputScreen({
           </p>
         )}
       </Section>
-      <div className="space-y-10">
+      <div className="setup-panels">
         <Section title="List summary">
           <div role="status" aria-live="polite" aria-atomic="true">
             {list.status === 'building' ? (
@@ -241,8 +241,8 @@ export function InputScreen({
             </>
           )}
         </Section>
-        <Section title="Draw settings">
-          <p>{format.format(poolSize)} eligible entrants</p>
+        <Section title="Draw settings" step={2}>
+          <p className="pool-count">{format.format(poolSize)} eligible entrants</p>
           <Stepper
             label="Winners"
             value={config.winners}
@@ -291,6 +291,7 @@ export function InputScreen({
             />
           </div>
           <Button
+            className="primary-action"
             disabled={!ready || poolSize === 0 || !onDraw}
             onClick={() => onDraw?.(ready)}
           >
