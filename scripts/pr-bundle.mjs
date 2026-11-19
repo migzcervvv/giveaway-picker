@@ -35,7 +35,7 @@ for (const c of chunks) {
   diff += c;
 }
 
-const idMatch = meta.headRefName.match(/codex\/(T\d+|V\d+-\d+)-/);
+const idMatch = meta.headRefName.match(/codex\/(T\d+[a-z]?|V\d+-\d+)-/);
 let card = '(task card not found; branch name does not match codex/<TaskID>-<slug>)';
 if (idMatch && existsSync('docs/tasks')) {
   const f = readdirSync('docs/tasks').find((x) => x.startsWith(`${idMatch[1]}-`));
