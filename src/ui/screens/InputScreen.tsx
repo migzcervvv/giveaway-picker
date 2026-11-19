@@ -7,6 +7,7 @@ import { drawConfigStore } from '@/store/drawConfig';
 import { sessionStore } from '@/store/session';
 import { settingsStore } from '@/store/settings';
 import { useListBuilder } from '@/ui/hooks/useListBuilder';
+import { ImportPicker } from '@/ui/components/ImportPicker';
 import { Button } from '@/ui/components/Button';
 import { Section } from '@/ui/components/Section';
 import { Stepper } from '@/ui/components/Stepper';
@@ -91,7 +92,12 @@ export function InputScreen({
     );
     list.setText(
       value.slice(0, selectionStart) + inserted + value.slice(selectionEnd),
-      { immediate: true },
+      {
+        immediate: true,
+        imported:
+          session.getState().imported &&
+          (selectionStart !== 0 || selectionEnd !== value.length),
+      },
     );
   }
   async function pasteClipboard() {
@@ -111,6 +117,12 @@ export function InputScreen({
   return (
     <div className="input-layout">
       <Section title="Entrant list">
+        <ImportPicker
+          session={session}
+          onApply={(text) =>
+            list.setText(text, { immediate: true, imported: true })
+          }
+        />
         <label htmlFor={inputId} className="block text-sm">
           Entrants
         </label>
@@ -124,7 +136,11 @@ export function InputScreen({
           autoCorrect="off"
           autoCapitalize="off"
           placeholder="Paste names, one per line"
-          onChange={(event) => list.setText(event.target.value)}
+          onChange={(event) =>
+            list.setText(event.target.value, {
+              imported: session.getState().imported,
+            })
+          }
           onPaste={paste}
           className="min-h-80 w-full resize-y border border-[var(--muted)] bg-[var(--surface)] p-5 text-base leading-7 placeholder:text-[var(--muted)] md:min-h-[32rem]"
         />

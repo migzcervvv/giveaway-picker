@@ -12,7 +12,10 @@ export type ListBuilder = {
   error: string | null;
   locked: boolean;
   isActive(): boolean;
-  setText(text: string, options?: { immediate?: boolean }): void;
+  setText(
+    text: string,
+    options?: { immediate?: boolean; imported?: boolean },
+  ): void;
   clear(): void;
 };
 
@@ -91,10 +94,13 @@ export function useListBuilder({
     setError(null);
     try {
       const { dedupe, foldDiacritics } = settings.getState();
-      const result = await current.runner.build(splitPaste(value), {
-        dedupe,
-        foldDiacritics,
-      });
+      const result = await current.runner.build(
+        session.getState().imported ? value.split('\n') : splitPaste(value),
+        {
+          dedupe,
+          foldDiacritics,
+        },
+      );
       if (job !== current.job) return;
       if (generation !== session.getState().generation) return;
       if (value !== session.getState().rawText) return;
@@ -125,7 +131,10 @@ export function useListBuilder({
     }
   }
 
-  function setText(value: string, options?: { immediate?: boolean }) {
+  function setText(
+    value: string,
+    options?: { immediate?: boolean; imported?: boolean },
+  ) {
     if (!control.current.mounted || hasUnresolvedDraw(session.getState().draws))
       return;
     const current = control.current;
@@ -135,7 +144,7 @@ export function useListBuilder({
     current.text = value;
     setLocalText(value);
     try {
-      session.getState().setInput(value);
+      session.getState().setInput(value, options?.imported);
     } catch (cause) {
       report(cause);
       return;
