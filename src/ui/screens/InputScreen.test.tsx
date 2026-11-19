@@ -45,6 +45,40 @@ function paste(text: string) {
 const summary = () =>
   within(screen.getByRole('region', { name: 'List summary' }));
 
+test.each(['paste event', 'clipboard button'])(
+  '%s normalizes line endings before a later selection replacement',
+  async (path) => {
+    const text = 'Alice\r\nBob\rDana';
+    vi.stubGlobal(
+      'navigator',
+      Object.create(navigator, {
+        clipboard: { value: { readText: vi.fn().mockResolvedValue(text) } },
+      }),
+    );
+    const { session } = setup();
+    if (path === 'paste event') paste(text);
+    else
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Paste from clipboard' }),
+      );
+    await waitFor(() =>
+      expect(session.getState().build?.stats.finalCount).toBe(3),
+    );
+    expect(session.getState().rawText).toBe('Alice\nBob\nDana');
+    const field = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(field.value).toBe('Alice\nBob\nDana');
+    field.setSelectionRange(6, 9);
+    paste('Carol\r\nEve');
+    await waitFor(() =>
+      expect(
+        session.getState().build?.entrants.map(({ name }) => name),
+      ).toEqual(['Alice', 'Carol', 'Eve', 'Dana']),
+    );
+    expect(field.value).toBe('Alice\nCarol\nEve\nDana');
+    expect(session.getState().rawText).toBe(field.value);
+  },
+);
+
 test('paste builds summary, first five names, and duplicate counts without storing entrants', async () => {
   const { session } = setup();
   paste('Alice\nBob\nCarol\nDana\nEve\nFrank\nalice\n');

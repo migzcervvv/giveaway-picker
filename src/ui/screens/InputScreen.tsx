@@ -16,6 +16,10 @@ const format = new Intl.NumberFormat();
 const lockMessage =
   'Mark every winner as called or no-show before changing the list.';
 
+function normalizeLineEndings(text: string): string {
+  return text.replace(/\r\n?/g, '\n');
+}
+
 export function InputScreen({
   session = sessionStore,
   settings = settingsStore,
@@ -66,19 +70,19 @@ export function InputScreen({
   function paste(event: ClipboardEvent<HTMLTextAreaElement>) {
     event.preventDefault();
     if (list.locked) return;
-    const { selectionStart, selectionEnd } = event.currentTarget;
-    const inserted = event.clipboardData.getData('text/plain');
+    const { selectionStart, selectionEnd, value } = event.currentTarget;
+    const inserted = normalizeLineEndings(
+      event.clipboardData.getData('text/plain'),
+    );
     list.setText(
-      list.text.slice(0, selectionStart) +
-        inserted +
-        list.text.slice(selectionEnd),
+      value.slice(0, selectionStart) + inserted + value.slice(selectionEnd),
       { immediate: true },
     );
   }
   async function pasteClipboard() {
     try {
       const text = await navigator.clipboard.readText();
-      list.setText(text, { immediate: true });
+      list.setText(normalizeLineEndings(text), { immediate: true });
       setClipboardError('');
     } catch {
       setClipboardError(
