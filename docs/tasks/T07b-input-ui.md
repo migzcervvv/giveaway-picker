@@ -1,7 +1,7 @@
 ---
 id: T07b
 title: App shell, theme primitives, input screen
-status: in-review
+status: done
 depends_on: [T07a]
 branch: codex/T07b-input-ui
 ---
