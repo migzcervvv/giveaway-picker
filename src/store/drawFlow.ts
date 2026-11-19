@@ -66,6 +66,7 @@ export function createDrawFlow({
     }
     return {
       session,
+      history,
       settings,
       counts,
       busy: false,
@@ -186,6 +187,7 @@ export function createDrawFlow({
   });
 }
 type FlowState = {
+  history: typeof historyStore;
   session: typeof sessionStore;
   settings: typeof settingsStore;
   counts: typeof drawConfigStore;

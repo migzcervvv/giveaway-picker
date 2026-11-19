@@ -1,7 +1,7 @@
 ---
 id: T08
 title: Draw flow, plain reveal, winner actions
-status: in-review
+status: done
 depends_on: [T07a, T07b]
 branch: codex/T08-draw-flow
 ---

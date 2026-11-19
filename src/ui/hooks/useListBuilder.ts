@@ -111,7 +111,6 @@ export function useListBuilder({
   function commit(value: string) {
     if (hasUnresolvedDraw(session.getState().draws)) return;
     try {
-      session.getState().setInput(value);
       if (!value.trim()) {
         control.current.runner.cancel();
         // setInput is a no-op for unchanged text, so explicitly detach an empty build.
@@ -135,6 +134,13 @@ export function useListBuilder({
     clearTimeout(current.timer);
     current.text = value;
     setLocalText(value);
+    try {
+      session.getState().setInput(value);
+    } catch (cause) {
+      report(cause);
+      return;
+    }
+    if (value.trim()) setStatus('building');
     if (options?.immediate) commit(value);
     else current.timer = setTimeout(() => commit(value), debounceMs);
   }
