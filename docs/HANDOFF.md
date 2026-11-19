@@ -4,13 +4,14 @@ Read this first after any planner or session change. Sections marked (Codex) are
 
 ## Meta (Planner)
 - Last updated: 2026-11-19
-- Active planner: Claude
+- Active planner: ChatGPT
 - Planner log:
   - 2026-11-13 Claude: kickoff, plan, kit written.
   - 2026-11-13 ChatGPT: reviewed T02-T05, confirmed T05 merge (#6); drafted D-018 through D-021, merge policy update, and T06 ready card.
   - 2026-11-13 ChatGPT: confirmed PR #7 merge; accepted T06 split per D-022; drafted sequenced T06a/T06b cards and gated T07.
   - 2026-11-13 ChatGPT: verified T06a merge (#9, ecc56792); prepared T06b activation after confirming D-022 dependency gate.
   - 2026-11-19 Claude: took over from ChatGPT via handoff bundle; reviewed T06b (#11) APPROVE and setup-github fix (#13) APPROVE; added D-023 to D-025; split T07 into T07a/T07b.
+  - 2026-11-19 ChatGPT: resumed planning; requested PR #14 corrections to locked text-edit behavior and immediate invalidation of pending build results.
 
 ## Project snapshot (Planner)
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
