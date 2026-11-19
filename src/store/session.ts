@@ -1,5 +1,5 @@
 import { createStore } from 'zustand/vanilla';
-import { applyAction, deriveState } from '@/engine';
+import { applyAction, deriveState, toExportJson } from '@/engine';
 import type { BuildResult, DrawRecord } from '@/engine';
 
 export function hasUnresolvedDraw(draws: readonly DrawRecord[]): boolean {
@@ -42,6 +42,19 @@ export function createSessionStore() {
         checkGeneration(generation);
         const { build, draws } = get();
         if (!build) throw new Error('No active entrant pool');
+        const previous = draws.find(({ id }) => id === record.id);
+        if (
+          previous &&
+          (record.events.length < previous.events.length ||
+            toExportJson({
+              ...record,
+              events: record.events.slice(0, previous.events.length),
+            }) !== toExportJson(previous))
+        ) {
+          throw new Error(
+            'A draw update must preserve its identity and extend its event log',
+          );
+        }
         const next = draws.some(({ id }) => id === record.id)
           ? draws.map((draw) => (draw.id === record.id ? record : draw))
           : [...draws, record];
