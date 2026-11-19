@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
 import { deriveState } from '@/engine';
 import type { drawFlowStore } from '@/store/drawFlow';
+import { useCardReveal } from '../hooks/useCardReveal';
 import { Button } from '../components/Button';
 
 const batchSizes = { Minor: 6, Major: 3, Grand: 1 };
@@ -22,7 +23,9 @@ export function AudienceStage({
   onReveal(id: string, count: number): void;
   onExit(): void;
 }) {
+  const sequence = useCardReveal();
   const state = useStore(flow);
+  const sound = useStore(state.settings, (s) => s.soundEnabled);
   const record = useStore(state.session, (s) =>
     s.draws.find((d) => d.id === state.activeId),
   );
@@ -32,6 +35,7 @@ export function AudienceStage({
   useEffect(() => {
     heading.current?.focus();
   }, [shielded]);
+  const [flipFrom, setFlipFrom] = useState(0);
   const [page, setPage] = useState(0);
   const slots = record
     ? deriveState(record.events).slots.filter(
@@ -54,17 +58,24 @@ export function AudienceStage({
     Math.min(disclosed, (currentPage + 1) * size),
   );
 
+  const count = Math.min(
+    (Math.floor(disclosed / size) + 1) * size,
+    slots.length,
+  );
   function reveal() {
     if (!record || state.busy || !more) return;
-    const count = Math.min(
-      (Math.floor(disclosed / size) + 1) * size,
-      slots.length,
+    setFlipFrom(disclosed);
+    sequence.start(
+      { Minor: 2000, Major: 2450, Grand: 2850 }[prize],
+      sound,
+      () => {
+        const nextSlot = slots[count - 1];
+        if (nextSlot?.role === 'winner' && nextSlot.rank > visible)
+          state.next(record.id);
+        onReveal(record.id, count);
+        setPage(Math.floor((count - 1) / size));
+      },
     );
-    const nextSlot = slots[count - 1];
-    if (nextSlot?.role === 'winner' && nextSlot.rank > visible)
-      state.next(record.id);
-    onReveal(record.id, count);
-    setPage(Math.floor((count - 1) / size));
   }
 
   if (shielded)
@@ -86,12 +97,27 @@ export function AudienceStage({
     <main className="audience-stage" aria-label="Audience View">
       <header className="stage-bar">
         <span className="font-display text-3xl">The Lucky Draw</span>
-        <Button
-          disabled={state.busy}
-          onClick={() => (more ? setShielded(true) : onExit())}
-        >
-          Return to operator
-        </Button>
+        <div className="stage-tools">
+          <Button
+            aria-pressed={!sound}
+            onClick={() => {
+              sequence.silence();
+              state.settings.getState().update({ soundEnabled: !sound });
+            }}
+          >
+            Mute
+          </Button>
+          <Button
+            disabled={state.busy}
+            onClick={() => {
+              sequence.cancel();
+              if (more) setShielded(true);
+              else onExit();
+            }}
+          >
+            Return to operator
+          </Button>
+        </div>
       </header>
       <section className="stage-content">
         {record ? (
@@ -113,11 +139,13 @@ export function AudienceStage({
         <h1 className="stage-title" tabIndex={-1} ref={heading}>
           {state.busy
             ? 'Preparing draw…'
-            : disclosed
-              ? 'Winners'
-              : record
-                ? 'Ready to reveal'
-                : 'Ready to draw'}
+            : sequence.shuffling
+              ? 'Shuffling…'
+              : disclosed
+                ? 'Winners'
+                : record
+                  ? 'Ready to reveal'
+                  : 'Ready to draw'}
         </h1>
         {state.error && (
           <p role="alert">
@@ -126,10 +154,27 @@ export function AudienceStage({
           </p>
         )}
         <div aria-live="polite" aria-atomic="true">
-          {cards.length > 0 && (
-            <ol className="stage-cards">
-              {cards.map((slot) => (
-                <li key={slot.rank}>
+          {sequence.shuffling && (
+            <div className="stage-cards mystery-cards" aria-hidden="true">
+              {Array.from({ length: count - disclosed }, (_, i) => (
+                <div key={i} className="mystery-ticket">
+                  <span>✦</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {!sequence.shuffling && cards.length > 0 && (
+            <ol
+              className="stage-cards"
+              data-celebrate={sequence.celebrating || undefined}
+            >
+              {cards.map((slot, index) => (
+                <li
+                  key={slot.rank}
+                  data-flip={
+                    currentPage * size + index >= flipFrom || undefined
+                  }
+                >
                   <p className="stage-prize">
                     {slot.role === 'backup'
                       ? 'Promoted backup'
@@ -163,15 +208,30 @@ export function AudienceStage({
             </Button>
           )}
           {more && (
-            <Button className="primary-action" onClick={reveal}>
-              {disclosed ? 'Reveal next batch' : 'Reveal'}
+            <Button
+              className="primary-action"
+              onClick={(event) => {
+                if (event.detail <= 1) {
+                  if (sequence.shuffling) sequence.skip();
+                  else reveal();
+                }
+              }}
+            >
+              {sequence.shuffling
+                ? 'Skip'
+                : disclosed
+                  ? 'Reveal next batch'
+                  : 'Reveal'}
             </Button>
           )}
-          {lastPage > 0 && (
+          {!sequence.shuffling && lastPage > 0 && (
             <>
               <Button
                 disabled={currentPage === 0}
-                onClick={() => setPage(currentPage - 1)}
+                onClick={() => {
+                  sequence.settle();
+                  setPage(currentPage - 1);
+                }}
               >
                 Previous page
               </Button>
@@ -180,7 +240,10 @@ export function AudienceStage({
               </span>
               <Button
                 disabled={currentPage >= lastPage}
-                onClick={() => setPage(currentPage + 1)}
+                onClick={() => {
+                  sequence.settle();
+                  setPage(currentPage + 1);
+                }}
               >
                 Next page
               </Button>

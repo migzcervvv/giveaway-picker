@@ -22,6 +22,8 @@ beforeEach(() => {
 afterEach(async () => {
   cleanup();
   vi.restoreAllMocks();
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
   localStorage.clear();
   await fixture.db.delete();
 });
@@ -132,4 +134,88 @@ test('failed save presents a nameless error and no reveal control', async () => 
   click('Start draw');
   await screen.findByRole('button', { name: 'Reveal' });
   privateStage();
+});
+
+function motion(reduced = false) {
+  const preference = Object.assign(new EventTarget(), { matches: reduced });
+  vi.stubGlobal('matchMedia', () => preference);
+  return preference;
+}
+test('face-down batch contains no names; timer and Skip disclose each saved batch once', async () => {
+  motion();
+  const audio = vi.fn();
+  vi.stubGlobal('AudioContext', audio);
+  await configure(true);
+  click('Mute');
+  click('Start draw');
+  await screen.findByRole('button', { name: 'Reveal' });
+  const [saved] = await fixture.repo.listRecords();
+  const [first, second] = saved?.slots ?? [];
+  if (!first || !second) throw new Error('Missing fixture slots');
+  vi.useFakeTimers();
+  click('Reveal');
+  fireEvent.click(btn('Skip'), { detail: 2 });
+  privateStage();
+  expect(btn('Skip')).toBeTruthy();
+  act(() => vi.advanceTimersByTime(1999));
+  privateStage();
+  act(() => vi.advanceTimersByTime(1));
+  expect(screen.getByText(first.name)).toBeTruthy();
+  expect(document.body.innerHTML).not.toContain(second.name);
+  click('Reveal next batch');
+  expect(document.body.innerHTML).not.toContain(second.name);
+  click('Skip');
+  expect(screen.getByText(second.name)).toBeTruthy();
+  expect(document.querySelector('[data-celebrate]')).toBeNull();
+  act(() => vi.runAllTimers());
+  expect(screen.getAllByRole('listitem')).toHaveLength(1);
+  expect(audio).not.toHaveBeenCalled();
+});
+
+test('exit cancels the shuffle; a live motion preference change finishes it immediately', async () => {
+  const preference = motion();
+  await configure();
+  click('Start draw');
+  await screen.findByRole('button', { name: 'Reveal' });
+  vi.useFakeTimers();
+  click('Reveal');
+  click('Return to operator');
+  act(() => vi.advanceTimersByTime(3000));
+  privateStage();
+  click('Resume Audience View');
+  privateStage();
+  click('Reveal');
+  act(() => {
+    preference.matches = true;
+    preference.dispatchEvent(new Event('change'));
+  });
+  expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  expect(document.querySelector('[data-celebrate]')).toBeNull();
+});
+
+test('unmount during shuffle clears its timer and motion listener', async () => {
+  const preference = motion();
+  const remove = vi.spyOn(preference, 'removeEventListener');
+  await configure();
+  click('Start draw');
+  await screen.findByRole('button', { name: 'Reveal' });
+  vi.useFakeTimers();
+  click('Reveal');
+  cleanup();
+  expect(remove).toHaveBeenCalledWith('change', expect.any(Function));
+  expect(vi.getTimerCount()).toBe(0);
+});
+test('reduced motion reveals immediately, without opening an audio context', async () => {
+  motion(true);
+  const audio = vi.fn();
+  vi.stubGlobal('AudioContext', audio);
+  await configure();
+  click('Start draw');
+  await screen.findByRole('button', { name: 'Reveal' });
+  click('Reveal');
+  expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  expect(
+    document.querySelector('.mystery-ticket, [data-celebrate]'),
+  ).toBeNull();
+  expect(audio).not.toHaveBeenCalled();
 });

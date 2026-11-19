@@ -26,6 +26,7 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
   if (audience)
     return (
       <AudienceStage
+        key={state.activeId}
         flow={flow}
         prize={prize}
         setPrize={setPrize}
