@@ -1,7 +1,7 @@
 ---
 id: T05
 title: Engine: hash, record
-status: in-review
+status: done
 depends_on: [T04]
 branch: codex/T05-engine-hash-record
 ---

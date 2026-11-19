@@ -1,7 +1,7 @@
 ---
 id: T06b
 title: Memory-only session, settings, history store, unload guard
-status: in-review
+status: done
 depends_on: [T06a]
 branch: codex/T06b-store-session
 ---
