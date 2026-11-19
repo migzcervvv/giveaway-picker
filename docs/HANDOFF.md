@@ -17,8 +17,8 @@ Read this first after any planner or session change. Sections marked (Codex) are
 Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dexie, Matter.js, SheetJS. Engine-first build; animation is a replay of a precomputed secure-RNG result. Repo is source of truth. See PLAN.md, ARCHITECTURE.md, DECISIONS.md.
 
 ## Current state (Codex)
-- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11), T07a (#17), T07b (#18), Issue #16 (#19), T08 (#20).
-- In review: T09 history and exports on `codex/T09-history-export`.
+- Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11), T07a (#17), T07b (#18), Issue #16 (#19), T08 (#20), T09 (#21).
+- In review: T10a import worker on `codex/T10-spreadsheet-import`.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -38,8 +38,10 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | T07a | List build runner, draw-config store, useListBuilder hook | done | #17 |
 | T07b | App shell, theme primitives, input screen (gated on T07a) | done | #18 |
 | T08 | Draw flow, plain reveal, winner actions | done | #20 |
-| T09 | History view + exports | in-review | |
-| T10 | xlsx/csv import + column picker | stub | |
+| T09 | History view + exports | done | #21 |
+| T10 | Spreadsheet import (non-executable umbrella) | stub | |
+| T10a | Import worker | in-review | |
+| T10b | Import picker UI (requires merged T10a) | ready | |
 | T11 | Reveal framework, audio, RevealLab | stub | |
 | T12 | Raffle drum | stub | |
 | T13 | Slot reel | stub | |
