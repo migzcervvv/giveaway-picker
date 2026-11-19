@@ -1,7 +1,7 @@
 ---
 id: T10b
 title: Spreadsheet picker UI and entrant-list integration
-status: ready
+status: in-review
 depends_on: [T10a]
 branch: codex/T10b-import-ui
 ---

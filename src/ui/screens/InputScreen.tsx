@@ -7,6 +7,7 @@ import { drawConfigStore } from '@/store/drawConfig';
 import { sessionStore } from '@/store/session';
 import { settingsStore } from '@/store/settings';
 import { useListBuilder } from '@/ui/hooks/useListBuilder';
+import { ImportPicker } from '@/ui/components/ImportPicker';
 import { Button } from '@/ui/components/Button';
 import { Section } from '@/ui/components/Section';
 import { Stepper } from '@/ui/components/Stepper';
@@ -111,6 +112,12 @@ export function InputScreen({
   return (
     <div className="input-layout">
       <Section title="Entrant list">
+        <ImportPicker
+          session={session}
+          onApply={(text) =>
+            list.setText(text, { immediate: true, imported: true })
+          }
+        />
         <label htmlFor={inputId} className="block text-sm">
           Entrants
         </label>

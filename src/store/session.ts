@@ -18,10 +18,18 @@ export function createSessionStore() {
       rawText: string,
       build: BuildResult | null,
       buildOptions = get().buildOptions,
+      imported = false,
     ) {
       if (hasUnresolvedDraw(get().draws))
         throw new Error('Resolve the current draws before replacing the pool');
-      set({ rawText, build, buildOptions, generation: Symbol(), draws: [] });
+      set({
+        rawText,
+        imported,
+        build,
+        buildOptions,
+        generation: Symbol(),
+        draws: [],
+      });
     }
 
     function checkGeneration(generation: symbol) {
@@ -31,16 +39,18 @@ export function createSessionStore() {
 
     return {
       rawText: '',
+      imported: false,
       build: null,
       buildOptions: defaultOptions,
       generation: Symbol(),
       draws: [],
-      setInput(rawText) {
-        if (rawText !== get().rawText) resetPool(rawText, null);
+      setInput(rawText, imported = false) {
+        if (imported || get().imported || rawText !== get().rawText)
+          resetPool(rawText, null, get().buildOptions, imported);
       },
       setBuild(build, generation, buildOptions = defaultOptions) {
         checkGeneration(generation);
-        resetPool(get().rawText, build, buildOptions);
+        resetPool(get().rawText, build, buildOptions, get().imported);
       },
       reset() {
         resetPool('', null);
@@ -83,11 +93,12 @@ export function createSessionStore() {
 
 type SessionState = {
   rawText: string;
+  imported: boolean;
   build: BuildResult | null;
   buildOptions: BuildOptions;
   generation: symbol;
   draws: readonly DrawRecord[];
-  setInput(rawText: string): void;
+  setInput(rawText: string, imported?: boolean): void;
   setBuild(
     build: BuildResult,
     generation: symbol,
