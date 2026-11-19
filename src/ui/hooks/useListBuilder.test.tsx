@@ -70,11 +70,12 @@ test('debounces a burst, supports immediate paste and clears a blank list', asyn
     result.current.setText('Alice');
   });
   expect(result.current.text).toBe('Alice');
-  expect(setInput).not.toHaveBeenCalled();
+  expect(deps.session.getState().rawText).toBe('Alice');
+  expect(deps.session.getState().build).toBeNull();
   await act(async () => {
     await vi.advanceTimersByTimeAsync(250);
   });
-  expect(setInput).toHaveBeenCalledTimes(1);
+  expect(setInput).toHaveBeenCalledTimes(2);
   expect(deps.session.getState().build?.entrants[0]?.name).toBe('Alice');
   act(() => result.current.setText('Bob', { immediate: true }));
   expect(deps.session.getState().rawText).toBe('Bob');

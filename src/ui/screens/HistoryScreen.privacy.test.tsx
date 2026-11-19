@@ -109,15 +109,13 @@ test('confirmation and retry recheck current session associations rather than tr
   await screen.findByRole('alert');
   await act(async () => {
     const session = flow.getState().session;
-    session
-      .getState()
-      .setBuild(
-        buildEntrants(['A', 'B', 'C', 'D'], {
-          dedupe: true,
-          foldDiacritics: false,
-        }),
-        session.getState().generation,
-      );
+    session.getState().setBuild(
+      buildEntrants(['A', 'B', 'C', 'D'], {
+        dedupe: true,
+        foldDiacritics: false,
+      }),
+      session.getState().generation,
+    );
     session.getState().setDraw(record, session.getState().generation);
   });
   fireEvent.click(button('Retry'));
@@ -129,3 +127,42 @@ test('confirmation and retry recheck current session associations rather than tr
   expect(fixture.repo.deleteRecord).toHaveBeenCalledTimes(1);
   expect(await fixture.repo.getRecord(record.id)).toEqual(record);
 });
+
+test.each([false, true])(
+  'History preserves pending typing with an existing pool=%s',
+  async (existing) => {
+    const { session } = fixture.flow.getState();
+    if (existing) {
+      session.getState().setInput('Old name');
+      session
+        .getState()
+        .setBuild(
+          buildEntrants(
+            ['Old name'],
+            fixture.flow.getState().settings.getState(),
+          ),
+          session.getState().generation,
+        );
+    }
+    render(<App flow={fixture.flow} />);
+    fireEvent.change(screen.getByRole('textbox'), {
+      target: { value: 'Revised name\nSecond name' },
+    });
+    expect((button('Draw') as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(button('History'));
+    expect(session.getState().build).toBeNull();
+    fireEvent.click(button('Return to raffle'));
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe(
+      'Revised name\nSecond name',
+    );
+    await waitFor(() =>
+      expect((button('Draw') as HTMLButtonElement).disabled).toBe(false),
+    );
+    expect(
+      session.getState().build?.entrants.map((entry) => entry.name),
+    ).toEqual(['Revised name', 'Second name']);
+    fireEvent.click(button('Draw'));
+    await screen.findByRole('heading', { name: 'Draw results' });
+    expect(session.getState().draws[0]?.slots[0]?.name).toBe('Revised name');
+  },
+);
