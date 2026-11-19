@@ -170,3 +170,39 @@ main > [role=status]:not(:empty) { margin-block: 1rem; overflow-wrap: anywhere; 
   .stage-cards:has(li:nth-child(3)) li { padding: 1.5rem; }
   .stage-cards:has(li:nth-child(3)) .stage-name[data-long] { font-size: 2.3rem; }
 }
+
+.stage-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
+.stage-tools [aria-pressed=true] { border-color: var(--accent); }
+.mystery-ticket {
+  position: relative; display: grid; place-items: center;
+  min-height: clamp(8rem, 20vh, 14rem); margin: .35rem;
+  border-radius: .75rem; border: 1px solid var(--accent); color: var(--accent);
+  background: repeating-linear-gradient(45deg, #202e43 0 2px, #19263b 2px 8px);
+  box-shadow: -4px 4px #29384c, -5px 5px var(--accent), -9px 9px #19263b;
+  animation: ticket-shuffle .48s ease-in-out infinite alternate;
+}
+.mystery-ticket::before { content: ''; position: absolute; inset: .55rem; border: 1px solid #776b54; border-radius: .45rem; }
+.mystery-ticket span { font-size: 3.5rem; }
+.mystery-ticket:nth-child(even) { animation-direction: alternate-reverse; }
+@keyframes ticket-shuffle {
+  from { transform: translate(-3px, 2px) rotate(-1deg); }
+  to { transform: translate(3px, -2px) rotate(1deg); }
+}
+.stage-cards[data-celebrate] { position: relative; }
+.stage-cards[data-celebrate] li[data-flip] { animation: ticket-flip .28s ease-out; }
+.stage-cards[data-celebrate]::after {
+  content: '✦　·　✧　·　✦'; position: absolute; pointer-events: none;
+  top: -.8rem; left: 50%; color: var(--accent); letter-spacing: .35em;
+  animation: ticket-spark .65s ease-out both;
+}
+@keyframes ticket-flip { from { transform: perspective(50rem) rotateY(-72deg); } to { transform: none; } }
+@keyframes ticket-spark {
+  from { opacity: .9; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -1.2rem); }
+}
+@media (min-width: 1200px) {
+  .mystery-cards:has(:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-cards[data-celebrate]::after { content: none; }
+}
