@@ -172,3 +172,48 @@ test('Draw waits for the imported generation to finish building', async () => {
   await act(async () => finishBuild?.());
   expect((button('Draw') as HTMLButtonElement).disabled).toBe(false);
 });
+
+test('editing an imported comma name keeps one entrant through drawing', async () => {
+  await select();
+  fireEvent.click(button('Use selected column'));
+  await complete(['Doe, Jane']);
+  fireEvent.change(screen.getByRole('textbox'), {
+    target: { value: 'Doe, Janet' },
+  });
+  await waitFor(() =>
+    expect(session().build?.entrants.map((e) => e.name)).toEqual([
+      'Doe, Janet',
+    ]),
+  );
+  fireEvent.click(button('Draw'));
+  await screen.findByRole('button', { name: 'Mark Doe, Janet called' });
+});
+
+test.each(['clipboard button', 'replace selection'])(
+  '%s switches an imported draft to paste parsing',
+  async (method) => {
+    const replacement = 'Ada,Grace';
+    vi.stubGlobal(
+      'navigator',
+      Object.create(navigator, {
+        clipboard: { value: { readText: async () => replacement } },
+      }),
+    );
+    await select();
+    fireEvent.click(button('Use selected column'));
+    await complete(['Doe, Jane']);
+    if (method === 'clipboard button')
+      fireEvent.click(button('Paste from clipboard'));
+    else {
+      const field = screen.getByRole('textbox') as HTMLTextAreaElement;
+      field.select();
+      fireEvent.paste(field, { clipboardData: { getData: () => replacement } });
+    }
+    await waitFor(() =>
+      expect(session().build?.entrants.map((e) => e.name)).toEqual([
+        'Ada',
+        'Grace',
+      ]),
+    );
+  },
+);

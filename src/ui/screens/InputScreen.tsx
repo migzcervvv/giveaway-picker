@@ -92,7 +92,12 @@ export function InputScreen({
     );
     list.setText(
       value.slice(0, selectionStart) + inserted + value.slice(selectionEnd),
-      { immediate: true },
+      {
+        immediate: true,
+        imported:
+          session.getState().imported &&
+          (selectionStart !== 0 || selectionEnd !== value.length),
+      },
     );
   }
   async function pasteClipboard() {
@@ -131,7 +136,11 @@ export function InputScreen({
           autoCorrect="off"
           autoCapitalize="off"
           placeholder="Paste names, one per line"
-          onChange={(event) => list.setText(event.target.value)}
+          onChange={(event) =>
+            list.setText(event.target.value, {
+              imported: session.getState().imported,
+            })
+          }
           onPaste={paste}
           className="min-h-80 w-full resize-y border border-[var(--muted)] bg-[var(--surface)] p-5 text-base leading-7 placeholder:text-[var(--muted)] md:min-h-[32rem]"
         />
