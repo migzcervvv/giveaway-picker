@@ -206,3 +206,6 @@ main > [role=status]:not(:empty) { margin-block: 1rem; overflow-wrap: anywhere; 
 @media (prefers-reduced-motion: reduce) {
   .stage-cards[data-celebrate]::after { content: none; }
 }
+
+.audience-stage button, .audience-stage select { min-height: 44px; }
+.mystery-cards[data-paused] .mystery-ticket { animation-play-state: paused; }

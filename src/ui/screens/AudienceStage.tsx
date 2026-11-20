@@ -19,6 +19,8 @@ export function AudienceStage({
   onReveal,
   onExit,
   onControls,
+  standby,
+  setStandby,
 }: {
   flow: typeof drawFlowStore;
   prize: Prize;
@@ -29,6 +31,8 @@ export function AudienceStage({
   onReveal(id: string, count: number): void;
   onExit(): void;
   onControls(): void;
+  standby: boolean;
+  setStandby(value: boolean): void;
 }) {
   const sequence = useCardReveal();
   const state = useStore(flow);
@@ -38,10 +42,11 @@ export function AudienceStage({
   );
   const oneAtATime = useStore(state.settings, (s) => s.oneAtATime);
   const [managing, setManaging] = useState(false);
+  const [replaying, setReplaying] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
-  }, [managing]);
+  }, [managing, standby]);
   const [flipFrom, setFlipFrom] = useState(0);
   const [page, setPage] = useState(0);
   const [requestedEnd, setBatchEnd] = useState(0);
@@ -82,6 +87,7 @@ export function AudienceStage({
   }
   function reveal() {
     if (!record || state.busy || !more) return;
+    setReplaying(false);
     setFlipFrom(disclosed);
     sequence.start(
       { Minor: 2000, Major: 2450, Grand: 2850 }[prize],
@@ -92,6 +98,33 @@ export function AudienceStage({
       },
     );
   }
+
+  const replayStart = pages[lastPage - 1] ?? 0;
+  function replay() {
+    if (state.busy || sequence.shuffling || disclosed <= replayStart) return;
+    setReplaying(true);
+    setFlipFrom(replayStart);
+    sequence.start(1200, sound, () => setPage(lastPage));
+  }
+
+  function interruptPresentation() {
+    sequence.cancel();
+    setReplaying(false);
+  }
+
+  if (standby)
+    return (
+      <main className="audience-stage">
+        <section className="stage-content">
+          <h1 className="stage-title" ref={heading} tabIndex={-1}>
+            Standby
+          </h1>
+          <Button onClick={() => setStandby(false)}>
+            Resume Audience View
+          </Button>
+        </section>
+      </main>
+    );
 
   if (managing)
     return (
@@ -110,6 +143,14 @@ export function AudienceStage({
         <span className="font-display text-3xl">The Lucky Draw</span>
         <div className="stage-tools">
           <Button
+            onClick={() => {
+              interruptPresentation();
+              setStandby(true);
+            }}
+          >
+            Hide Audience
+          </Button>
+          <Button
             aria-pressed={!sound}
             onClick={() => {
               sequence.silence();
@@ -121,7 +162,7 @@ export function AudienceStage({
           <Button
             disabled={state.busy}
             onClick={() => {
-              sequence.cancel();
+              interruptPresentation();
               if (more) setManaging(true);
               else onExit();
             }}
@@ -170,13 +211,15 @@ export function AudienceStage({
         <h1 className="stage-title" tabIndex={-1} ref={heading}>
           {state.busy
             ? 'Preparing draw…'
-            : sequence.shuffling
-              ? 'Shuffling…'
-              : disclosed
-                ? 'Winners'
-                : record
-                  ? 'Ready to reveal'
-                  : 'Ready to draw'}
+            : replaying
+              ? 'Replay'
+              : sequence.shuffling
+                ? 'Shuffling…'
+                : disclosed
+                  ? 'Winners'
+                  : record
+                    ? 'Ready to reveal'
+                    : 'Ready to draw'}
         </h1>
         {state.error && (
           <p role="alert">
@@ -184,11 +227,19 @@ export function AudienceStage({
             status.
           </p>
         )}
-        <div aria-live="polite" aria-atomic="true">
+        <div aria-live={replaying ? 'off' : 'polite'} aria-atomic="true">
           {sequence.shuffling && (
-            <div className="stage-cards mystery-cards" aria-hidden="true">
+            <div
+              className="stage-cards mystery-cards"
+              data-paused={sequence.paused || undefined}
+              aria-hidden="true"
+            >
               {Array.from(
-                { length: Math.min(6, count - disclosed) },
+                {
+                  length: replaying
+                    ? disclosed - replayStart
+                    : Math.min(6, count - disclosed),
+                },
                 (_, i) => (
                   <div key={i} className="mystery-ticket">
                     <span>✦</span>
@@ -239,26 +290,46 @@ export function AudienceStage({
               Start draw
             </Button>
           )}
-          {batchEnd > disclosed && (
-            <Button onClick={() => present(Math.min(batchEnd, disclosed + 6))}>
+          {sequence.shuffling && (
+            <>
+              <Button onClick={sequence.togglePause}>
+                {sequence.paused ? 'Resume animation' : 'Pause animation'}
+              </Button>
+              <Button
+                className="primary-action"
+                onClick={(event) => {
+                  if (event.detail <= 1) sequence.skip();
+                }}
+              >
+                Skip
+              </Button>
+            </>
+          )}
+          {!sequence.shuffling && disclosed > replayStart && (
+            <Button disabled={state.busy} onClick={replay}>
+              Replay Reveal
+            </Button>
+          )}
+          {!sequence.shuffling && batchEnd > disclosed && (
+            <Button
+              onClick={() => {
+                setReplaying(false);
+                present(Math.min(batchEnd, disclosed + 6));
+              }}
+            >
               Show rest of batch
             </Button>
           )}
-          {more && batchEnd <= disclosed && (
+          {!sequence.shuffling && more && batchEnd <= disclosed && (
             <Button
               className="primary-action"
               onClick={(event) => {
                 if (event.detail <= 1) {
-                  if (sequence.shuffling) sequence.skip();
-                  else reveal();
+                  reveal();
                 }
               }}
             >
-              {sequence.shuffling
-                ? 'Skip'
-                : disclosed
-                  ? 'Reveal next batch'
-                  : 'Reveal'}
+              {disclosed ? 'Reveal next batch' : 'Reveal'}
             </Button>
           )}
           {!sequence.shuffling && lastPage > 0 && (
@@ -266,6 +337,7 @@ export function AudienceStage({
               <Button
                 disabled={currentPage === 0}
                 onClick={() => {
+                  setReplaying(false);
                   sequence.settle();
                   setPage(currentPage - 1);
                 }}
@@ -278,6 +350,7 @@ export function AudienceStage({
               <Button
                 disabled={currentPage >= lastPage}
                 onClick={() => {
+                  setReplaying(false);
                   sequence.settle();
                   setPage(currentPage + 1);
                 }}
