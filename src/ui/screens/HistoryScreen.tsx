@@ -118,6 +118,7 @@ export function HistoryScreen({
                     onClick={() => select(draw.id)}
                   >
                     {draw.createdAt}
+                    {draw.events.at(-1)?.type === 'CANCELLED' && ' (Cancelled)'}
                   </Button>
                   <p>
                     {draw.entrantCount} entrants · {draw.config.winners} winners

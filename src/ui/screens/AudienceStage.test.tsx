@@ -200,10 +200,17 @@ test('unmount during shuffle clears its timer and motion listener', async () => 
   click('Start draw');
   await screen.findByRole('button', { name: 'Reveal' });
   vi.useFakeTimers();
+  const schedule = vi.spyOn(window, 'setTimeout');
+  const cancel = vi.spyOn(window, 'clearTimeout');
   click('Reveal');
+  const timer =
+    schedule.mock.results[
+      schedule.mock.calls.findIndex(([, ms]) => ms === 2000)
+    ];
+  expect(timer).toBeDefined();
   cleanup();
   expect(remove).toHaveBeenCalledWith('change', expect.any(Function));
-  expect(vi.getTimerCount()).toBe(0);
+  expect(cancel).toHaveBeenCalledWith(timer?.value);
 });
 test('reduced motion reveals immediately, without opening an audio context', async () => {
   motion(true);

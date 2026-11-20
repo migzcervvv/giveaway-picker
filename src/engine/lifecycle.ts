@@ -8,6 +8,7 @@ export type Slot = {
 };
 
 export type DrawEvent = { id: string; at: string } & (
+  | { type: 'CANCELLED' }
   | { type: 'DRAWN'; slots: Slot[] }
   | { type: 'CALLED'; rank: number }
   | { type: 'NO_SHOW'; rank: number }
@@ -17,7 +18,7 @@ export type DrawEvent = { id: string; at: string } & (
 );
 
 export type SlotStatus =
-  'pending' | 'called' | 'no_show' | 'standby' | 'promoted';
+  'pending' | 'called' | 'no_show' | 'standby' | 'promoted' | 'cancelled';
 type DerivedSlot = Slot & { status: SlotStatus; replacedBy?: number };
 type Action = { type: 'CALLED' | 'NO_SHOW'; rank: number } | { type: 'UNDO' };
 
@@ -65,6 +66,11 @@ export function deriveState(events: readonly DrawEvent[]): {
     if (undone.has(event.id)) continue;
 
     switch (event.type) {
+      case 'CANCELLED':
+        for (const slot of slots.values())
+          if (slot.status !== 'called' && slot.status !== 'no_show')
+            slot.status = 'cancelled';
+        break;
       case 'DRAWN':
         for (const slot of event.slots) {
           slots.set(slot.rank, {
@@ -117,6 +123,8 @@ export function applyAction(
   now: string,
   newId: () => string,
 ): DrawEvent[] {
+  if (events.some((e) => e.type === 'CANCELLED'))
+    throw new LifecycleError('INVALID_TRANSITION');
   if (action.type === 'UNDO') {
     const undone = undoneIds(events);
     const target = [...events]

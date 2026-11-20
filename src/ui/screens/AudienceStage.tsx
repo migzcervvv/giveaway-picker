@@ -16,6 +16,7 @@ export function AudienceStage({
   shown,
   onReveal,
   onExit,
+  onControls,
 }: {
   flow: typeof drawFlowStore;
   prize: Prize;
@@ -23,6 +24,7 @@ export function AudienceStage({
   shown: number;
   onReveal(id: string, count: number): void;
   onExit(): void;
+  onControls(): void;
 }) {
   const sequence = useCardReveal();
   const state = useStore(flow);
@@ -82,6 +84,7 @@ export function AudienceStage({
   if (managing)
     return (
       <RevealedWinners
+        onControls={onControls}
         flow={flow}
         record={record}
         slots={slots.slice(0, disclosed)}

@@ -34,6 +34,8 @@ function copyEvent(event: Readonly<DrawEvent>): DrawEvent {
   const { id, at, type } = event;
   requireValid(typeof id === 'string' && typeof at === 'string');
   switch (type) {
+    case 'CANCELLED':
+      return { id, at, type };
     case 'DRAWN':
       requireValid(Array.isArray(event.slots));
       return { id, at, type, slots: Array.from(event.slots, copySlot) };
@@ -158,6 +160,11 @@ export function createDrawRepository(db: DrawDatabase) {
         const record = projectRecord(stored);
         if (record.events.length !== expectedEventCount)
           throw new DrawRepositoryError('STALE_COUNT');
+        if (
+          record.events.some((e) => e.type === 'CANCELLED') ||
+          batch.slice(0, -1).some((e) => e.type === 'CANCELLED')
+        )
+          throw new DrawRepositoryError('INVALID_RECORD');
         if (batch.some(({ type }) => type === 'DRAWN'))
           throw new DrawRepositoryError('UNEXPECTED_DRAWN');
         checkNewIds(batch, new Set(record.events.map(({ id }) => id)));

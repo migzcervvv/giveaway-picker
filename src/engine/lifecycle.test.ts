@@ -153,3 +153,24 @@ test('replays deterministically without mutating frozen events or slots', () => 
   expect(first.slots[0]).not.toBe(initial.slots[0]);
   expect(initial.slots[0]).toEqual(slots[0]);
 });
+
+test('cancellation releases only unawarded slots and permanently closes actions', () => {
+  const called = [drawn, ...append([drawn], { type: 'CALLED', rank: 1 })];
+  const processed = [
+    ...called,
+    ...append(called, { type: 'NO_SHOW', rank: 2 }),
+  ];
+  const closed = [
+    ...processed,
+    { type: 'CANCELLED', id: 'cancel', at } as const,
+  ];
+  expect(deriveState(closed).slots.map((s) => s.status)).toEqual([
+    'called',
+    'no_show',
+    'cancelled',
+    'cancelled',
+    'cancelled',
+  ]);
+  expect(() => append(closed, { type: 'UNDO' })).toThrow();
+  expect(() => append(closed, { type: 'CALLED', rank: 3 })).toThrow();
+});

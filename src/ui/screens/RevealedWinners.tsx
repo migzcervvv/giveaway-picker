@@ -12,12 +12,14 @@ export function RevealedWinners({
   slots,
   heading,
   onResume,
+  onControls,
 }: {
   flow: typeof drawFlowStore;
   record?: DrawRecord;
   slots: Slots;
   heading: RefObject<HTMLHeadingElement | null>;
   onResume(): void;
+  onControls(): void;
 }) {
   const state = useStore(flow);
   function current() {
@@ -73,6 +75,9 @@ export function RevealedWinners({
           onClick={onResume}
         >
           Resume Audience View
+        </Button>
+        <Button disabled={state.busy} onClick={onControls}>
+          Round and session controls
         </Button>
         {slots.length === 0 && (
           <p>

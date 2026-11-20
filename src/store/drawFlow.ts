@@ -8,7 +8,7 @@ import {
   uniformInt,
 } from '@/engine';
 import type { RandomSource } from '@/engine';
-import { sessionStore } from './session';
+import { hasUnresolvedDraw, sessionStore } from './session';
 import { historyStore } from './history';
 import { settingsStore } from './settings';
 import { drawConfigStore } from './drawConfig';
@@ -156,6 +156,41 @@ export function createDrawFlow({
                 : `${state.slots.find(({ rank }) => rank === action.rank)?.name} marked ${action.type === 'CALLED' ? 'called' : 'no-show'}.${promoted?.type === 'PROMOTED' ? ` ${state.slots.find(({ rank }) => rank === promoted.backupRank)?.name} promoted.` : ''}`,
           });
         }),
+      finish: (mode, id, generation) =>
+        run(async (saved) => {
+          check(generation);
+          const { draws } = session.getState();
+          const targets = draws.filter((draw) => hasUnresolvedDraw([draw]));
+          if (
+            mode === 'restart' &&
+            (id !== get().activeId ||
+              draws.at(-1)?.id !== id ||
+              !targets.some((draw) => draw.id === id))
+          )
+            throw new Error('Round changed');
+          for (const draw of targets) {
+            if (mode === 'restart' && draw.id !== id) continue;
+            const updated = await history
+              .getState()
+              .append(
+                draw.id,
+                [{ type: 'CANCELLED', id: newId(), at: now() }],
+                draw.events.length,
+              );
+            saved();
+            check(generation);
+            session.getState().setDraw(updated, generation);
+          }
+          if (mode !== 'restart') {
+            session.getState().reset(mode === 'keep');
+            counts.getState().reset();
+          }
+          set({
+            activeId: null,
+            visible: mode === 'restart' ? get().visible : {},
+            announcement: '',
+          });
+        }),
       canUndo(id) {
         try {
           session
@@ -198,6 +233,11 @@ type FlowState = {
   announcement: string;
   start(ready: boolean): Promise<void>;
   act(id: string, action: DrawAction): Promise<void>;
+  finish(
+    mode: 'restart' | 'keep' | 'clear',
+    id: string | null,
+    generation: symbol,
+  ): Promise<void>;
   canUndo(id: string): boolean;
   show(id: string | null): void;
   next(id: string): void;

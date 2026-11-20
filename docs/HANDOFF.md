@@ -18,7 +18,7 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 
 ## Current state (Codex)
 - Merged: T01 (#1), T02 (#3), T03 (#4), T04 (#5), T05 (#6), T06a (#9), T06b (#11), T07a (#17), T07b (#18), Issue #16 (#19), T08 (#20), T09 (#21), T10a (#22), T10b (#23), UX01 (#24), UX02 (#25), UX03 (#26).
-- In review: UX04 revealed-winner management on `codex/UX04-manage-revealed-winners`.
+- UX04 merged (#28). In review: UX05 restart and reset. UX06 and UX07 are ready after their prerequisite merges.
 - Toolchain versions: Node 26.13.1, pnpm 12.18.0, Vite 8.3.8, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, Vitest 5.1.0. Playwright is deferred.
 - Chosen fonts: Instrument Serif (display), IBM Plex Mono (mono).
 - Known issues: none.
@@ -45,7 +45,10 @@ Offline-first giveaway winner picker. React + Vite + TS + Tailwind, Zustand, Dex
 | UX01 | Operator interface | done | #24 |
 | UX02 | Audience stage | done | #25 |
 | UX03 | Card reveal | done | #26 |
-| UX04 | Manage revealed winners | in-review | |
+| UX04 | Manage revealed winners | done | #28 |
+| UX05 | Restart and reset | in-review | |
+| UX06 | Shuffle and batches | ready | |
+| UX07 | Standby, replay and pause | ready | |
 | T11 | Reveal framework, audio, RevealLab | stub | |
 | T12 | Raffle drum | stub | |
 | T13 | Slot reel | stub | |
