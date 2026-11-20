@@ -279,3 +279,53 @@ test('standby cancels a paused reveal and replay preserves saved disclosure', as
   vi.useRealTimers();
   expect(await fixture.repo.listRecords()).toEqual([saved]);
 });
+
+test.each(['Hide Audience', 'Return to operator'])(
+  'interrupting replay with %s restores the current page and live announcements',
+  async (exit) => {
+    motion();
+    await configure(true);
+    click('Return to operator');
+    click('Increase winners');
+    click('Audience View');
+    click('Start draw');
+    await screen.findByRole('button', { name: 'Reveal' });
+    const [saved] = await fixture.repo.listRecords();
+    const [first, second, third] = saved?.slots ?? [];
+    if (!saved || !first || !second || !third)
+      throw new Error('Missing winners');
+    vi.useFakeTimers();
+    click('Reveal');
+    click('Skip');
+    click('Reveal next batch');
+    click('Skip');
+    click('Previous page');
+    click('Replay Reveal');
+    expect(screen.getByRole('heading', { name: 'Replay' })).toBeTruthy();
+    if (exit === 'Return to operator') click('Pause animation');
+    click(exit);
+    click('Resume Audience View');
+    act(() => vi.advanceTimersByTime(2000));
+    expect(screen.getByRole('heading', { name: 'Winners' })).toBeTruthy();
+    expect(screen.getByText('Page 1 of 2')).toBeTruthy();
+    expect(
+      screen
+        .getByText(first.name)
+        .closest('[aria-live]')
+        ?.getAttribute('aria-live'),
+    ).toBe('polite');
+    expect(screen.queryByText(second.name)).toBeNull();
+    for (const slot of saved.slots.slice(2))
+      expect(document.body.innerHTML).not.toContain(slot.name);
+    click('Reveal next batch');
+    click('Skip');
+    expect(
+      screen
+        .getByText(third.name)
+        .closest('[aria-live]')
+        ?.getAttribute('aria-live'),
+    ).toBe('polite');
+    vi.useRealTimers();
+    expect(await fixture.repo.listRecords()).toEqual([saved]);
+  },
+);

@@ -107,6 +107,11 @@ export function AudienceStage({
     sequence.start(1200, sound, () => setPage(lastPage));
   }
 
+  function interruptPresentation() {
+    sequence.cancel();
+    setReplaying(false);
+  }
+
   if (standby)
     return (
       <main className="audience-stage">
@@ -139,7 +144,7 @@ export function AudienceStage({
         <div className="stage-tools">
           <Button
             onClick={() => {
-              sequence.cancel();
+              interruptPresentation();
               setStandby(true);
             }}
           >
@@ -157,7 +162,7 @@ export function AudienceStage({
           <Button
             disabled={state.busy}
             onClick={() => {
-              sequence.cancel();
+              interruptPresentation();
               if (more) setManaging(true);
               else onExit();
             }}
