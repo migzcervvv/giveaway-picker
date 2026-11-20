@@ -13,7 +13,9 @@ export function AudienceStage({
   flow,
   prize,
   setPrize,
-  shown,
+  pages,
+  batch,
+  setBatch,
   onReveal,
   onExit,
   onControls,
@@ -21,7 +23,9 @@ export function AudienceStage({
   flow: typeof drawFlowStore;
   prize: Prize;
   setPrize(prize: Prize): void;
-  shown: number;
+  pages: number[];
+  batch?: number;
+  setBatch(value: number): void;
   onReveal(id: string, count: number): void;
   onExit(): void;
   onControls(): void;
@@ -40,31 +44,42 @@ export function AudienceStage({
   }, [managing]);
   const [flipFrom, setFlipFrom] = useState(0);
   const [page, setPage] = useState(0);
+  const [requestedEnd, setBatchEnd] = useState(0);
   const slots = record
     ? deriveState(record.events).slots.filter(
         (s) => s.role === 'winner' || s.status !== 'standby',
       )
     : [];
+  const batchEnd = Math.min(requestedEnd, slots.length);
   const visible = record
     ? (state.visible[record.id] ?? record.slots.length)
     : 0;
   const size =
     oneAtATime || (record && visible < record.config.winners)
       ? 1
-      : batchSizes[prize];
-  const disclosed = Math.min(shown, slots.length);
-  const lastPage = Math.max(0, Math.ceil(disclosed / size) - 1);
+      : (batch ?? batchSizes[prize]);
+  const disclosed = Math.min(pages.at(-1) ?? 0, slots.length);
+  const lastPage = Math.max(0, pages.length - 1);
   const currentPage = Math.min(page, lastPage);
-  const more = disclosed < slots.length;
+  const start = pages[currentPage - 1] ?? 0;
   const cards = slots.slice(
-    currentPage * size,
-    Math.min(disclosed, (currentPage + 1) * size),
+    start,
+    Math.min(disclosed, pages[currentPage] ?? 0),
   );
-
-  const count = Math.min(
-    (Math.floor(disclosed / size) + 1) * size,
-    slots.length,
-  );
+  const more = disclosed < slots.length;
+  const count = Math.min(disclosed + size, slots.length);
+  function present(end: number) {
+    if (
+      !record ||
+      flow.getState().activeId !== record.id ||
+      !state.session.getState().draws.includes(record)
+    )
+      return;
+    const next = slots[end - 1];
+    if (next?.role === 'winner' && next.rank > visible) state.next(record.id);
+    onReveal(record.id, end);
+    setPage(pages.length);
+  }
   function reveal() {
     if (!record || state.busy || !more) return;
     setFlipFrom(disclosed);
@@ -72,11 +87,8 @@ export function AudienceStage({
       { Minor: 2000, Major: 2450, Grand: 2850 }[prize],
       sound,
       () => {
-        const nextSlot = slots[count - 1];
-        if (nextSlot?.role === 'winner' && nextSlot.rank > visible)
-          state.next(record.id);
-        onReveal(record.id, count);
-        setPage(Math.floor((count - 1) / size));
+        setBatchEnd(count);
+        present(Math.min(count, disclosed + 6));
       },
     );
   }
@@ -135,6 +147,26 @@ export function AudienceStage({
             </select>
           </label>
         )}
+        <label>
+          Reveal batch size{' '}
+          <select
+            value={size}
+            disabled={
+              oneAtATime ||
+              state.busy ||
+              sequence.shuffling ||
+              batchEnd > disclosed
+            }
+            onChange={(e) => setBatch(Number(e.target.value))}
+          >
+            {Array.from({ length: 10 }, (_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1}
+              </option>
+            ))}
+          </select>
+        </label>
+        {oneAtATime && <p>One-at-a-time mode reveals one winner per batch.</p>}
         <h1 className="stage-title" tabIndex={-1} ref={heading}>
           {state.busy
             ? 'Preparing draw…'
@@ -155,11 +187,14 @@ export function AudienceStage({
         <div aria-live="polite" aria-atomic="true">
           {sequence.shuffling && (
             <div className="stage-cards mystery-cards" aria-hidden="true">
-              {Array.from({ length: count - disclosed }, (_, i) => (
-                <div key={i} className="mystery-ticket">
-                  <span>✦</span>
-                </div>
-              ))}
+              {Array.from(
+                { length: Math.min(6, count - disclosed) },
+                (_, i) => (
+                  <div key={i} className="mystery-ticket">
+                    <span>✦</span>
+                  </div>
+                ),
+              )}
             </div>
           )}
           {!sequence.shuffling && cards.length > 0 && (
@@ -170,9 +205,7 @@ export function AudienceStage({
               {cards.map((slot, index) => (
                 <li
                   key={slot.rank}
-                  data-flip={
-                    currentPage * size + index >= flipFrom || undefined
-                  }
+                  data-flip={start + index >= flipFrom || undefined}
                 >
                   <p className="stage-prize">
                     {slot.role === 'backup'
@@ -206,7 +239,12 @@ export function AudienceStage({
               Start draw
             </Button>
           )}
-          {more && (
+          {batchEnd > disclosed && (
+            <Button onClick={() => present(Math.min(batchEnd, disclosed + 6))}>
+              Show rest of batch
+            </Button>
+          )}
+          {more && batchEnd <= disclosed && (
             <Button
               className="primary-action"
               onClick={(event) => {

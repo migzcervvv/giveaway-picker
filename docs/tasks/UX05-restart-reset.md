@@ -1,6 +1,6 @@
 ---
 id: UX05
-status: in-review
+status: done
 depends_on: [UX04]
 ---
 

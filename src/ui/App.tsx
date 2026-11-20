@@ -16,7 +16,8 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
   const [historyOpen, openHistory] = useState(false);
   const [audience, setAudience] = useState(false);
   const [prize, setPrize] = useState<Prize>('Minor');
-  const [presented, setPresented] = useState<Record<string, number>>({});
+  const [presented, setPresented] = useState<Record<string, number[]>>({});
+  const [batch, setBatch] = useState<Partial<Record<Prize, number>>>({});
   const currentDraws = draws.filter(
     (draw) => draw.events.at(-1)?.type !== 'CANCELLED',
   );
@@ -97,11 +98,15 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
         flow={flow}
         prize={prize}
         setPrize={setPrize}
-        shown={presented[state.activeId ?? ''] ?? 0}
+        pages={presented[state.activeId ?? ''] ?? []}
+        batch={batch[prize]}
+        setBatch={(value) =>
+          setBatch((prior) => ({ ...prior, [prize]: value }))
+        }
         onReveal={(id, count) =>
           setPresented((previous) => ({
             ...previous,
-            [id]: Math.max(previous[id] ?? 0, count),
+            [id]: [...(previous[id] ?? []).filter((end) => end < count), count],
           }))
         }
         onExit={() => setAudience(false)}

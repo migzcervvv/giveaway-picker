@@ -101,6 +101,7 @@ test('stage stays private across deferred persistence, double Start and early ex
   expect(document.body.innerHTML).not.toContain(backup.name);
   click('Reveal next batch');
   expect(screen.getByText(backup.name)).toBeTruthy();
+  click('Previous page');
   expect(screen.getByText('no-show')).toBeTruthy();
 });
 
