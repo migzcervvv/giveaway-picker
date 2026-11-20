@@ -147,3 +147,36 @@ test('pending write blocks duplicate actions and resume, and cannot attach to an
     updated?.events.filter((event) => event.type === 'NO_SHOW'),
   ).toHaveLength(1);
 });
+
+test('batch changes preserve old pages and only advance after explicit disclosure', async () => {
+  const { saved } = await firstBatch(30);
+  click('Resume Audience View');
+  let cursor = 6;
+  const pageNames = () =>
+    Array.from(
+      document.querySelectorAll('.stage-name'),
+      (el) => el.textContent,
+    );
+  for (const size of [3, 1, 10]) {
+    const before = pageNames();
+    fireEvent.change(screen.getByLabelText('Reveal batch size'), {
+      target: { value: String(size) },
+    });
+    expect(pageNames()).toEqual(before);
+    click('Reveal next batch');
+    expect(pageNames()).toEqual(
+      saved.slots.slice(cursor, cursor + Math.min(6, size)).map((s) => s.name),
+    );
+    cursor += Math.min(6, size);
+    for (const slot of saved.slots.slice(cursor))
+      expect(document.body.innerHTML).not.toContain(slot.name);
+    if (size === 10) {
+      click('Show rest of batch');
+      expect(pageNames()).toEqual(
+        saved.slots.slice(cursor, cursor + 4).map((s) => s.name),
+      );
+      cursor += 4;
+    }
+  }
+  expect(await fixture.repo.getRecord(saved.id)).toEqual(saved);
+});

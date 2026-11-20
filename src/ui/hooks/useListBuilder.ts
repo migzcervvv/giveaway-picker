@@ -6,6 +6,8 @@ import type { BuildRunner } from '@/io/build/runner';
 import { hasUnresolvedDraw, sessionStore } from '@/store/session';
 import { settingsStore } from '@/store/settings';
 
+import { shuffleRoster } from '@/io/build/shuffle';
+
 export type ListBuilder = {
   text: string;
   status: 'idle' | 'building' | 'ready' | 'error';
@@ -16,6 +18,8 @@ export type ListBuilder = {
     text: string,
     options?: { immediate?: boolean; imported?: boolean },
   ): void;
+  shuffle(): void;
+  shuffled: boolean;
   clear(): void;
 };
 
@@ -41,6 +45,8 @@ export function useListBuilder({
     runner: initialRunner,
     mounted: false,
   });
+  const worker = useRef<Worker | null>(null);
+  const [shuffled, setShuffled] = useState(false);
   const locked = useStore(session, (state) => hasUnresolvedDraw(state.draws));
 
   useEffect(() => {
@@ -69,6 +75,7 @@ export function useListBuilder({
       }
     });
     return () => {
+      worker.current?.terminate();
       current.mounted = false;
       unsubscribe();
       clearTimeout(current.timer);
@@ -141,6 +148,9 @@ export function useListBuilder({
     current.job++;
     current.runner.cancel();
     clearTimeout(current.timer);
+    worker.current?.terminate();
+    worker.current = null;
+    setShuffled(false);
     current.text = value;
     setLocalText(value);
     try {
@@ -161,6 +171,69 @@ export function useListBuilder({
     locked,
     isActive: () => control.current.mounted,
     setText,
+    shuffled,
+    shuffle() {
+      const current = control.current,
+        state = session.getState();
+      if (
+        !current.mounted ||
+        !state.build ||
+        status === 'building' ||
+        worker.current ||
+        hasUnresolvedDraw(state.draws)
+      )
+        return;
+      const request = {
+        text: state.rawText,
+        imported: state.imported,
+        options: state.buildOptions,
+        previous: state.build,
+      };
+      const job = ++current.job;
+      setShuffled(false);
+      setStatus('building');
+      setError(null);
+      const apply = (result: ReturnType<typeof shuffleRoster>) => {
+        if (
+          job !== current.job ||
+          !current.mounted ||
+          state !== session.getState()
+        )
+          return;
+        session.setState({ rawText: result.text, build: result.build });
+        current.text = result.text;
+        setLocalText(result.text);
+        setStatus('ready');
+        setShuffled(true);
+      };
+      try {
+        if (request.previous.stats.rawCount <= 5000) {
+          apply(shuffleRoster(request));
+          return;
+        }
+        const task = new Worker(
+          new URL('../../io/build/shuffle.worker.ts', import.meta.url),
+          { type: 'module' },
+        );
+        worker.current = task;
+        task.onmessage = ({ data }) => {
+          task.terminate();
+          worker.current = null;
+          apply(data);
+        };
+        task.onerror = () => {
+          task.terminate();
+          worker.current = null;
+          if (job === current.job)
+            report(new Error('Shuffle failed. Retry the shuffle.'));
+        };
+        task.postMessage(request);
+      } catch (error) {
+        worker.current?.terminate();
+        worker.current = null;
+        report(error);
+      }
+    },
     clear: () => setText('', { immediate: true }),
   };
 }

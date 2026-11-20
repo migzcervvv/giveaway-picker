@@ -155,6 +155,20 @@ export function InputScreen({
               Paste from clipboard
             </Button>
           )}
+          <Button
+            disabled={
+              !build ||
+              list.locked ||
+              list.status === 'building' ||
+              build.stats.rawCount < 2
+            }
+            onClick={(event) => {
+              if (event.detail <= 1) list.shuffle();
+            }}
+          >
+            Shuffle Names
+          </Button>
+          {list.shuffled && <span role="status">Names shuffled.</span>}
           <Button disabled={list.locked} onClick={list.clear}>
             Clear
           </Button>
