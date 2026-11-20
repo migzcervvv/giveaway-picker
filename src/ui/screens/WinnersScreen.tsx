@@ -2,6 +2,7 @@ import { useStore } from 'zustand';
 import { deriveState } from '@/engine';
 import { drawFlowStore } from '@/store/drawFlow';
 import { Button } from '@/ui/components/Button';
+import { WinnerRow } from '@/ui/components/WinnerRow';
 import { Section } from '@/ui/components/Section';
 
 export function WinnersScreen({
@@ -28,46 +29,13 @@ export function WinnersScreen({
               (slot.role === 'backup' && slot.status !== 'standby'),
           )
           .map((slot) => (
-            <li key={slot.rank} className="winner-row space-y-3">
-              <p>
-                {slot.role === 'winner'
-                  ? `Winner ${slot.rank}`
-                  : `Backup ${slot.rank - record.config.winners}`}{' '}
-                · {slot.status.replace('_', '-')}
-              </p>
-              <p dir="auto" className="break-words font-display text-4xl">
-                {slot.name}
-              </p>
-              {(slot.status === 'pending' || slot.status === 'promoted') && (
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    className="primary-action"
-                    aria-label={`Mark ${slot.name} called`}
-                    disabled={state.busy}
-                    onClick={() =>
-                      void state.act(record.id, {
-                        type: 'CALLED',
-                        rank: slot.rank,
-                      })
-                    }
-                  >
-                    Mark called
-                  </Button>
-                  <Button
-                    aria-label={`Mark ${slot.name} no-show`}
-                    disabled={state.busy}
-                    onClick={() =>
-                      void state.act(record.id, {
-                        type: 'NO_SHOW',
-                        rank: slot.rank,
-                      })
-                    }
-                  >
-                    No-show
-                  </Button>
-                </div>
-              )}
-            </li>
+            <WinnerRow
+              key={slot.rank}
+              slot={slot}
+              winnerCount={record.config.winners}
+              busy={state.busy}
+              onAction={(action) => void state.act(record.id, action)}
+            />
           ))}
       </ol>
       {derived.exhausted.length > 0 && (

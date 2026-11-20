@@ -1,7 +1,7 @@
 ---
 id: UX03
 title: The Lucky Draw — shuffle, card flip and event-ready verification
-status: in-review
+status: done
 depends_on: [UX02]
 branch: codex/UX03-card-reveal
 ---

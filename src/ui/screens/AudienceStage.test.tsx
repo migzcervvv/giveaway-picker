@@ -200,10 +200,17 @@ test('unmount during shuffle clears its timer and motion listener', async () => 
   click('Start draw');
   await screen.findByRole('button', { name: 'Reveal' });
   vi.useFakeTimers();
+  const schedule = vi.spyOn(window, 'setTimeout');
+  const cancel = vi.spyOn(window, 'clearTimeout');
   click('Reveal');
+  const shuffleTimer =
+    schedule.mock.results[
+      schedule.mock.calls.findIndex(([, ms]) => ms === 2000)
+    ];
+  expect(shuffleTimer).toBeDefined();
   cleanup();
   expect(remove).toHaveBeenCalledWith('change', expect.any(Function));
-  expect(vi.getTimerCount()).toBe(0);
+  expect(cancel).toHaveBeenCalledWith(shuffleTimer?.value);
 });
 test('reduced motion reveals immediately, without opening an audio context', async () => {
   motion(true);
@@ -218,4 +225,122 @@ test('reduced motion reveals immediately, without opening an audio context', asy
     document.querySelector('.mystery-ticket, [data-celebrate]'),
   ).toBeNull();
   expect(audio).not.toHaveBeenCalled();
+});
+
+test.each([7, 30])(
+  'processes six disclosed slots in a %i-winner draw',
+  async (count) => {
+    motion(true);
+    const roster = Array.from(
+      { length: count + 3 },
+      (_, i) => 'Ticket-' + String(i).padStart(3, '0'),
+    );
+    fireEvent.paste(screen.getByRole('textbox'), {
+      clipboardData: { getData: () => roster.join('\n') },
+    });
+    await waitFor(() => expect(btn('Audience View').disabled).toBe(false));
+    for (let i = 1; i < count; i++) click('Increase winners');
+    click('Increase backups');
+    click('Increase backups');
+    click('Audience View');
+    click('Start draw');
+    await screen.findByRole('button', { name: 'Reveal' });
+    click('Reveal');
+    click('Return to operator');
+    const [saved] = await fixture.repo.listRecords();
+    if (!saved) throw new Error('Missing record');
+    const [first, second] = saved.slots;
+    if (!first || !second) throw new Error('Missing winners');
+    const assertPrivate = () => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(6);
+      for (const { name } of saved.slots.slice(6))
+        expect(document.body.innerHTML).not.toContain(name);
+      expect(screen.queryByRole('button', { name: 'History' })).toBeNull();
+      expect(screen.queryByRole('textbox')).toBeNull();
+    };
+    assertPrivate();
+    click('Mark ' + first.name + ' called');
+    expect(btn('Resume Audience View').disabled).toBe(true);
+    await waitFor(() => expect(btn('Undo').disabled).toBe(false));
+    click('Undo');
+    await screen.findByRole('button', {
+      name: 'Mark ' + first.name + ' called',
+    });
+    click('Mark ' + first.name + ' called');
+    await waitFor(() =>
+      expect(btn('Resume Audience View').disabled).toBe(false),
+    );
+    click('Mark ' + second.name + ' no-show');
+    fireEvent.click(btn('Mark ' + second.name + ' no-show'));
+    await waitFor(() =>
+      expect(btn('Resume Audience View').disabled).toBe(false),
+    );
+    assertPrivate();
+    const [updated] = await fixture.repo.listRecords();
+    expect(updated?.slots).toEqual(saved.slots);
+    expect(updated?.events.slice(-3)).toMatchObject([
+      { type: 'CALLED', rank: 1 },
+      { type: 'NO_SHOW', rank: 2 },
+      { type: 'PROMOTED', backupRank: count + 1, replacesRank: 2 },
+    ]);
+    click('Resume Audience View');
+    assertPrivate();
+    const later: string[] = [];
+    while (screen.queryByRole('button', { name: 'Reveal next batch' })) {
+      click('Reveal next batch');
+      later.push(
+        ...Array.from(
+          document.querySelectorAll('.stage-name'),
+          (el) => el.textContent ?? '',
+        ),
+      );
+    }
+    expect(later).toEqual(saved.slots.slice(6, count + 1).map((s) => s.name));
+  },
+);
+
+test('restricted writes keep errors private and cannot attach after a pool reset', async () => {
+  await configure(true);
+  click('Start draw');
+  await screen.findByRole('button', { name: 'Reveal' });
+  click('Reveal');
+  click('Return to operator');
+  const [saved] = await fixture.repo.listRecords();
+  const first = saved?.slots[0],
+    secret = saved?.slots[1];
+  if (!first || !secret) throw new Error('Missing fixture slots');
+  const mark = 'Mark ' + first.name + ' no-show';
+  const append = fixture.repo.appendEvents;
+  const write = vi
+    .spyOn(fixture.repo, 'appendEvents')
+    .mockRejectedValueOnce(new Error(secret.name));
+  click(mark);
+  await screen.findByRole('alert');
+  expect(document.body.innerHTML).not.toContain(secret.name);
+  let release = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  write.mockImplementationOnce(async (...args) => {
+    await pending;
+    return append(...args);
+  });
+  click(mark);
+  await waitFor(() => expect(write).toHaveBeenCalledTimes(2));
+  // Normal operator navigation locks the pool during a draw. Simulate replacement
+  // while a repository write is in flight to exercise the generation guard.
+  act(() =>
+    fixture.flow
+      .getState()
+      .session.setState({ draws: [], generation: Symbol() }),
+  );
+  expect(screen.queryAllByRole('listitem')).toHaveLength(0);
+  await act(async () => release());
+  await screen.findByRole('alert');
+  expect(fixture.flow.getState().session.getState().draws).toHaveLength(0);
+  for (const slot of saved.slots)
+    expect(document.body.innerHTML).not.toContain(slot.name);
+  expect((await fixture.repo.listRecords())[0]?.events.at(-1)?.type).toBe(
+    'PROMOTED',
+  );
 });

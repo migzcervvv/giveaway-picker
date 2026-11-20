@@ -3,6 +3,7 @@ import { useStore } from 'zustand';
 import { deriveState } from '@/engine';
 import type { drawFlowStore } from '@/store/drawFlow';
 import { useCardReveal } from '../hooks/useCardReveal';
+import { ManageRevealed } from './ManageRevealed';
 import { Button } from '../components/Button';
 
 const batchSizes = { Minor: 6, Major: 3, Grand: 1 };
@@ -30,11 +31,11 @@ export function AudienceStage({
     s.draws.find((d) => d.id === state.activeId),
   );
   const oneAtATime = useStore(state.settings, (s) => s.oneAtATime);
-  const [shielded, setShielded] = useState(false);
+  const [managing, setManaging] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
-  }, [shielded]);
+  }, [managing]);
   const [flipFrom, setFlipFrom] = useState(0);
   const [page, setPage] = useState(0);
   const slots = record
@@ -62,6 +63,15 @@ export function AudienceStage({
     (Math.floor(disclosed / size) + 1) * size,
     slots.length,
   );
+  function stillCurrent() {
+    const current = flow.getState();
+    return (
+      !current.busy &&
+      current.activeId === record?.id &&
+      current.session.getState().draws.some((draw) => draw === record)
+    );
+  }
+
   function reveal() {
     if (!record || state.busy || !more) return;
     setFlipFrom(disclosed);
@@ -69,6 +79,7 @@ export function AudienceStage({
       { Minor: 2000, Major: 2450, Grand: 2850 }[prize],
       sound,
       () => {
+        if (!stillCurrent()) return;
         const nextSlot = slots[count - 1];
         if (nextSlot?.role === 'winner' && nextSlot.rank > visible)
           state.next(record.id);
@@ -78,20 +89,15 @@ export function AudienceStage({
     );
   }
 
-  if (shielded)
+  if (managing)
     return (
-      <main className="audience-stage">
-        <h1 className="stage-title" tabIndex={-1} ref={heading}>
-          Reveal pending
-        </h1>
-        <p>
-          Return to the audience to reveal the remaining winners before opening
-          the operator controls.
-        </p>
-        <Button className="primary-action" onClick={() => setShielded(false)}>
-          Resume Audience View
-        </Button>
-      </main>
+      <ManageRevealed
+        flow={flow}
+        record={record}
+        revealed={slots.slice(0, disclosed)}
+        stillCurrent={stillCurrent}
+        onResume={() => setManaging(false)}
+      />
     );
   return (
     <main className="audience-stage" aria-label="Audience View">
@@ -111,7 +117,7 @@ export function AudienceStage({
             disabled={state.busy}
             onClick={() => {
               sequence.cancel();
-              if (more) setShielded(true);
+              if (more) setManaging(true);
               else onExit();
             }}
           >
