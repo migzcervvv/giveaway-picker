@@ -304,3 +304,86 @@ test('overlapping winner actions are blocked until their persisted event batch c
   ]);
   expect((await repo.getRecord(first.id))?.events).toEqual(current().events);
 });
+
+test('restart preserves exclusions, archive and identity of separate replacement', async () => {
+  counts.getState().setWinners(2, 4);
+  counts.getState().setBackups(1, 4);
+  await flow.getState().start(true);
+  const original = current();
+  const gen = session.getState().generation;
+  await flow.getState().act(original.id, { type: 'CALLED', rank: 1 });
+  await flow.getState().act(original.id, { type: 'NO_SHOW', rank: 2 });
+  await flow.getState().finish('restart', original.id, gen);
+  expect((await repo.getRecord(original.id))?.events.at(-1)?.type).toBe(
+    'CANCELLED',
+  );
+  expect(eligible().map((e) => e.name)).toEqual(['Carol', 'Dana']);
+  settings.getState().update({ removeCalled: false });
+  expect(eligible().map((e) => e.name)).toEqual(['Alice', 'Carol', 'Dana']);
+  await flow.getState().start(true);
+  expect(current().id).not.toBe(original.id);
+  expect((await repo.listRecords()).length).toBe(2);
+});
+test('reset retries partial persistence once, keeps imported semantics and clears on request', async () => {
+  session.getState().setInput('Doe, Jane\nBob', true);
+  session
+    .getState()
+    .setBuild(
+      buildEntrants(['Doe, Jane', 'Bob'], options),
+      session.getState().generation,
+    );
+  await flow.getState().start(true);
+  await flow.getState().start(true);
+  const { generation } = session.getState();
+  const id = current().id;
+  const append = repo.appendEvents;
+  const writes = vi
+    .spyOn(repo, 'appendEvents')
+    .mockImplementationOnce(append)
+    .mockRejectedValueOnce(new Error('offline'));
+  await flow.getState().finish('keep', id, generation);
+  expect(session.getState().generation).toBe(generation);
+  expect(
+    (await repo.listRecords()).filter(
+      (d) => d.events.at(-1)?.type === 'CANCELLED',
+    ),
+  ).toHaveLength(1);
+  await Promise.all([
+    flow.getState().finish('keep', id, generation),
+    flow.getState().finish('keep', id, generation),
+  ]);
+  expect(writes).toHaveBeenCalledTimes(3);
+  expect(session.getState()).toMatchObject({
+    imported: true,
+    rawText: 'Doe, Jane\nBob',
+    draws: [],
+  });
+  expect(session.getState().build?.entrants[0]?.name).toBe('Doe, Jane');
+  expect(
+    (await repo.listRecords()).every(
+      (d) => d.events.filter((e) => e.type === 'CANCELLED').length === 1,
+    ),
+  ).toBe(true);
+  await flow.getState().finish('clear', null, session.getState().generation);
+  expect(session.getState().rawText).toBe('');
+});
+test('completed and older draws reject restart', async () => {
+  await flow.getState().start(true);
+  const first = current().id;
+  await flow.getState().start(true);
+  const second = current().id;
+  flow.getState().show(first);
+  await flow.getState().finish('restart', first, session.getState().generation);
+  expect(flow.getState().error).toBeTruthy();
+  flow.getState().show(second);
+  await flow.getState().act(second, { type: 'CALLED', rank: 1 });
+  await flow
+    .getState()
+    .finish('restart', second, session.getState().generation);
+  expect(flow.getState().error).toBeTruthy();
+  expect(
+    (await repo.listRecords())
+      .flatMap((d) => d.events)
+      .some((e) => e.type === 'CANCELLED'),
+  ).toBe(false);
+});

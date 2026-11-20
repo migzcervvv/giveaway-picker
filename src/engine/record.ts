@@ -53,6 +53,8 @@ function copySlot({ rank, role, entrantId, name }: Slot): Slot {
 function copyEvent(event: Readonly<DrawEvent>): DrawEvent {
   const { id, at, type } = event;
   switch (type) {
+    case 'CANCELLED':
+      return { id, at, type };
     case 'DRAWN': {
       const slots = event.slots.map((slot) => Object.freeze(copySlot(slot)));
       Object.freeze(slots);

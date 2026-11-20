@@ -5,6 +5,7 @@ import { useStore } from 'zustand';
 import { drawFlowStore } from '@/store/drawFlow';
 import { Button } from './components/Button';
 import { useState } from 'react';
+import { hasUnresolvedDraw } from '@/store/session';
 import { deriveState } from '@/engine';
 import { HistoryScreen } from './screens/HistoryScreen';
 
@@ -16,16 +17,82 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
   const [audience, setAudience] = useState(false);
   const [prize, setPrize] = useState<Prize>('Minor');
   const [presented, setPresented] = useState<Record<string, number>>({});
-  const hidden = draws.some((draw) =>
+  const currentDraws = draws.filter(
+    (draw) => draw.events.at(-1)?.type !== 'CANCELLED',
+  );
+  const hidden = currentDraws.some((draw) =>
     deriveState(draw.events).slots.some(
       (slot) =>
         slot.rank > (state.visible[draw.id] ?? draw.slots.length) &&
         (slot.role !== 'backup' || slot.status === 'standby'),
     ),
   );
+  const [control, setControl] = useState<{
+    id: string | null;
+    generation: symbol;
+    restart: boolean;
+  } | null>(null);
+  const latest = draws.at(-1);
+  const openControls = () =>
+    setControl({
+      id: state.activeId,
+      generation: state.session.getState().generation,
+      restart:
+        !!latest && latest.id === state.activeId && hasUnresolvedDraw([latest]),
+    });
+  if (control) {
+    const finish = async (mode: 'restart' | 'keep' | 'clear') => {
+      if (flow.getState().busy) return;
+      await state.finish(mode, control.id, control.generation);
+      if (flow.getState().error) return;
+      if (mode !== 'restart') setPresented({});
+      setAudience(false);
+      openHistory(false);
+      setControl(null);
+    };
+    return (
+      <main className="app-shell">
+        <section className="panel space-y-4">
+          <h1 className="panel-title">Round and session controls</h1>
+          {control.restart && (
+            <>
+              <p>
+                Restart cancels this round and keeps its history. Unawarded
+                places return to the pool. Called and no-show rules still apply.
+              </p>
+              <Button
+                disabled={state.busy}
+                onClick={() => void finish('restart')}
+              >
+                Confirm restart round
+              </Button>
+            </>
+          )}
+          <p>
+            Reset cancels all open rounds and preserves History. Keeping the
+            roster starts a fresh session where earlier winners can win again.
+            Clearing it also empties input.
+          </p>
+          <Button disabled={state.busy} onClick={() => void finish('keep')}>
+            Reset session — keep roster
+          </Button>
+          <Button disabled={state.busy} onClick={() => void finish('clear')}>
+            Reset session — clear roster
+          </Button>
+          <Button disabled={state.busy} onClick={() => setControl(null)}>
+            Go back
+          </Button>
+          {state.error && (
+            <p role="alert">Operation incomplete. Retry to finish.</p>
+          )}
+        </section>
+      </main>
+    );
+  }
   if (audience)
     return (
       <AudienceStage
+        onControls={openControls}
         key={state.activeId}
         flow={flow}
         prize={prize}
@@ -58,6 +125,9 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
           </p>
         </div>
         <nav aria-label="Operator navigation" className="flex flex-wrap gap-2">
+          <Button disabled={state.busy} onClick={openControls}>
+            Round and session controls
+          </Button>
           {active && !historyOpen && (
             <Button disabled={state.busy} onClick={() => setAudience(true)}>
               Audience View
@@ -97,7 +167,7 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
                 className="mb-6 flex flex-wrap gap-3"
               >
                 <Button onClick={() => state.show(null)}>Input</Button>
-                {draws.map(({ id }, index) => (
+                {currentDraws.map(({ id }, index) => (
                   <Button
                     key={id}
                     aria-pressed={id === state.activeId}

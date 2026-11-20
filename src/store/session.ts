@@ -52,8 +52,15 @@ export function createSessionStore() {
         checkGeneration(generation);
         resetPool(get().rawText, build, buildOptions, get().imported);
       },
-      reset() {
-        resetPool('', null);
+      reset(keepRoster = false) {
+        if (keepRoster)
+          resetPool(
+            get().rawText,
+            get().build,
+            get().buildOptions,
+            get().imported,
+          );
+        else resetPool('', null);
       },
       setDraw(record, generation) {
         checkGeneration(generation);
@@ -104,7 +111,7 @@ type SessionState = {
     generation: symbol,
     options?: BuildOptions,
   ): void;
-  reset(): void;
+  reset(keepRoster?: boolean): void;
   setDraw(record: DrawRecord, generation: symbol): void;
   prepareAction(
     drawId: string,
