@@ -72,7 +72,12 @@ test('stage stays private across deferred persistence, double Start and early ex
   privateStage();
   expect(btn('Return to operator').disabled).toBe(true);
   expect(screen.queryByRole('button', { name: 'Reveal' })).toBeNull();
+  click('Hide Audience');
   await act(async () => release());
+  await waitFor(() => expect(fixture.flow.getState().activeId).toBeTruthy());
+  expect(screen.getByRole('heading', { name: 'Standby' })).toBeTruthy();
+  privateStage();
+  click('Resume Audience View');
   await screen.findByRole('button', { name: 'Reveal' });
   const [saved] = await fixture.repo.listRecords();
   if (!saved) throw new Error('Draw was not persisted');
@@ -226,4 +231,51 @@ test('reduced motion reveals immediately, without opening an audio context', asy
     document.querySelector('.mystery-ticket, [data-celebrate]'),
   ).toBeNull();
   expect(audio).not.toHaveBeenCalled();
+});
+
+test('standby cancels a paused reveal and replay preserves saved disclosure', async () => {
+  const preference = motion();
+  await configure();
+  click('Start draw');
+  await screen.findByRole('button', { name: 'Reveal' });
+  const [saved] = await fixture.repo.listRecords();
+  if (!saved) throw new Error('Missing draw');
+  vi.useFakeTimers();
+  click('Reveal');
+  act(() => vi.advanceTimersByTime(500));
+  click('Pause animation');
+  act(() => vi.advanceTimersByTime(5000));
+  privateStage();
+  click('Resume animation');
+  act(() => vi.advanceTimersByTime(1499));
+  privateStage();
+  click('Hide Audience');
+  act(() => vi.advanceTimersByTime(5000));
+  expect(screen.getByRole('heading', { name: 'Standby' })).toBeTruthy();
+  privateStage();
+  click('Resume Audience View');
+  click('Reveal');
+  click('Pause animation');
+  act(() => {
+    preference.matches = true;
+    preference.dispatchEvent(new Event('change'));
+  });
+  const winners = saved.slots
+    .filter((slot) => slot.role === 'winner')
+    .map((slot) => slot.name);
+  for (const name of winners) expect(screen.getByText(name)).toBeTruthy();
+  preference.matches = false;
+  click('Replay Reveal');
+  expect(screen.getByRole('heading', { name: 'Replay' })).toBeTruthy();
+  privateStage();
+  click('Pause animation');
+  click('Skip');
+  for (const name of winners) expect(screen.getByText(name)).toBeTruthy();
+  expect(document.querySelector('[aria-live="off"]')).toBeTruthy();
+  click('Hide Audience');
+  privateStage();
+  click('Resume Audience View');
+  for (const name of winners) expect(screen.getByText(name)).toBeTruthy();
+  vi.useRealTimers();
+  expect(await fixture.repo.listRecords()).toEqual([saved]);
 });

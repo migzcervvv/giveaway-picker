@@ -79,6 +79,10 @@ export function RevealedWinners({
         <Button disabled={state.busy} onClick={onControls}>
           Round and session controls
         </Button>
+        <p>
+          Switch the projector away before opening operator controls on a
+          mirrored display.
+        </p>
         {slots.length === 0 && (
           <p>
             Reveal a winner on the audience screen to manage their status here.

@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 export function useCardReveal() {
   const pending = useRef<(() => void) | null>(null);
   const cleanup = useRef<(() => void) | null>(null);
+  const timer = useRef<number | undefined>(undefined);
+  const remaining = useRef(0);
+  const deadline = useRef(0);
+  const [paused, setPaused] = useState(false);
   const audio = useRef<AudioContext | null>(null);
   const [shuffling, setShuffling] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
@@ -48,6 +52,8 @@ export function useCardReveal() {
   }
 
   function dispose() {
+    clearTimeout(timer.current);
+    timer.current = undefined;
     cleanup.current?.();
     cleanup.current = null;
     pending.current = null;
@@ -58,9 +64,29 @@ export function useCardReveal() {
   function finish(animate: boolean) {
     const disclose = pending.current;
     dispose();
+    setPaused(false);
     setShuffling(false);
     setCelebrating(animate && !!disclose);
     disclose?.();
+  }
+
+  function schedule() {
+    deadline.current = performance.now() + remaining.current;
+    timer.current = window.setTimeout(() => finish(true), remaining.current);
+  }
+
+  function togglePause() {
+    if (!pending.current) return;
+    if (timer.current === undefined) {
+      schedule();
+      setPaused(false);
+    } else {
+      remaining.current = Math.max(0, deadline.current - performance.now());
+      clearTimeout(timer.current);
+      timer.current = undefined;
+      silence();
+      setPaused(true);
+    }
   }
 
   function start(duration: number, sound: boolean, disclose: () => void) {
@@ -75,25 +101,28 @@ export function useCardReveal() {
     setCelebrating(false);
     setShuffling(true);
     if (sound) chime();
-    const timer = window.setTimeout(() => finish(true), duration);
+    remaining.current = duration;
+    schedule();
     const changed = () => {
       if (preference.matches) finish(false);
     };
     preference.addEventListener('change', changed);
     cleanup.current = () => {
-      clearTimeout(timer);
       preference.removeEventListener('change', changed);
     };
   }
 
   return {
     start,
+    paused,
+    togglePause,
     shuffling,
     celebrating,
     silence,
     skip: () => finish(false),
     cancel: () => {
       dispose();
+      setPaused(false);
       setShuffling(false);
       setCelebrating(false);
     },

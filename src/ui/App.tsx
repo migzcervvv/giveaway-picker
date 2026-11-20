@@ -15,6 +15,7 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
   const active = draws.some(({ id }) => id === state.activeId);
   const [historyOpen, openHistory] = useState(false);
   const [audience, setAudience] = useState(false);
+  const [standby, setStandby] = useState(false);
   const [prize, setPrize] = useState<Prize>('Minor');
   const [presented, setPresented] = useState<Record<string, number[]>>({});
   const [batch, setBatch] = useState<Partial<Record<Prize, number>>>({});
@@ -55,6 +56,7 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
       <main className="app-shell">
         <section className="panel space-y-4">
           <h1 className="panel-title">Round and session controls</h1>
+          <p>Switch the projector away if it mirrors this screen.</p>
           {control.restart && (
             <>
               <p>
@@ -93,6 +95,8 @@ export function App({ flow = drawFlowStore }: { flow?: typeof drawFlowStore }) {
   if (audience)
     return (
       <AudienceStage
+        standby={standby}
+        setStandby={setStandby}
         onControls={openControls}
         key={state.activeId}
         flow={flow}
